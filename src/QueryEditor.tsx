@@ -1,44 +1,44 @@
 import { defaults } from 'lodash';
 
-import React, { ChangeEvent, PureComponent, SyntheticEvent } from 'react';
+import React, { ChangeEvent, FC, SyntheticEvent } from 'react';
 import { LegacyForms } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from './datasource';
-import { defaultQuery, MyDataSourceOptions, MyQuery } from './types';
+import { DataSourceOptions, Query } from './types';
 
 const { FormField, Switch } = LegacyForms;
 
-type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
+type Props = QueryEditorProps<DataSource, Query, DataSourceOptions>;
 
-export class QueryEditor extends PureComponent<Props> {
-  onPathChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query } = this.props;
+export const QueryEditor: FC<Props> = ({ query: storedQuery, onChange, onRunQuery }) => {
+  const defaultQuery: Partial<Query> = {
+    withStreaming: false,
+    path: '',
+  };
+  const query = defaults(storedQuery, defaultQuery);
+  const { path, withStreaming } = query;
+
+  const onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({ ...query, path: event.target.value });
   };
 
-  onWithStreamingChange = (event: SyntheticEvent<HTMLInputElement>) => {
-    const { onChange, query, onRunQuery } = this.props;
+  const onWithStreamingChange = (event: SyntheticEvent<HTMLInputElement>) => {
     onChange({ ...query, withStreaming: event.currentTarget.checked });
     // executes the query
     onRunQuery();
   };
 
-  render() {
-    const query = defaults(this.props.query, defaultQuery);
-    const { path, withStreaming } = query;
-
-    return (
-      <div className="gf-form">
-        <FormField
-          labelWidth={8}
-          value={path || ''}
-          onChange={this.onPathChange}
-          label="Path"
-          tooltip="Websocket URL Path to connect"
-          placeholder="/api/v1/ws/realtime"
-        />
-        <Switch checked={withStreaming || false} label="Enable streaming (v8+)" onChange={this.onWithStreamingChange} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="gf-form">
+      <FormField
+        labelWidth={8}
+        value={path || ''}
+        onChange={onQueryTextChange}
+        label="Path"
+        tooltip="Websocket URL Path to connect"
+        placeholder="/api/v1/ws/realtime"
+      />
+      <Switch checked={withStreaming || false} label="Enable streaming (v8+)" onChange={onWithStreamingChange} />
+    </div>
+  );
+};
