@@ -1,3 +1,8 @@
 module.exports = {
-  ...require("./node_modules/@grafana/toolkit/src/config/prettier.plugin.config.json"),
+  endOfLine: 'lf',
+  semi: false,
+  singleQuote: true,
+  arrowParens: 'avoid',
+  jsxSingleQuote: true,
+  trailingComma: 'all',
 };

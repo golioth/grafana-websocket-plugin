@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "start": "yarn watch",
     "build": "grafana-toolkit plugin:build",
     "test": "grafana-toolkit plugin:test",
     "dev": "grafana-toolkit plugin:dev",
     "watch": "grafana-toolkit plugin:dev --watch",
-    "sign": "grafana-toolkit plugin:sign",
-    "start": "yarn watch"
+    "lint": "eslint src/**/*.{js,ts,tsx} --quiet --fix",
+    "sign": "grafana-toolkit plugin:sign"
   },
-  "author": "miguel",
+  "author": "Golioth",
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/data": "latest",

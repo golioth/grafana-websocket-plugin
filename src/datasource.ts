@@ -1,9 +1,12 @@
-import { DataSourceInstanceSettings } from '@grafana/data';
-import { DataSourceWithBackend } from '@grafana/runtime';
-import { DataSourceOptions, Query } from './types';
+import { DataSourceInstanceSettings } from '@grafana/data'
+import { DataSourceWithBackend } from '@grafana/runtime'
+import { DataSourceOptions, Query } from './types'
 
-export class DataSource extends DataSourceWithBackend<Query, DataSourceOptions> {
+export class DataSource extends DataSourceWithBackend<
+  Query,
+  DataSourceOptions
+> {
   constructor(instanceSettings: DataSourceInstanceSettings<DataSourceOptions>) {
-    super(instanceSettings);
+    super(instanceSettings)
   }
 }
