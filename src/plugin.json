@@ -1,18 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "websocket",
-  "id": "golioth-websocket",
+  "name": "WebSocket API",
+  "id": "golioth-websocket-datasource",
   "metrics": true,
   "backend": true,
   "executable": "gpx_websocket",
   "info": {
-    "description": "",
+    "description": "A data source plugin for handling WebSocket connections on Grafana.",
     "author": {
-      "name": "miguel",
-      "url": ""
+      "name": "Golioth",
+      "url": "https://golioth.io"
     },
-    "keywords": [],
+    "keywords": ["websocket", "live", "stream", "api", "datasource"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
@@ -32,7 +32,8 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": ">=7.0.0",
+    "grafanaDependency": ">=8.0.0",
+    "grafanaVersion": "8.0.0",
     "plugins": []
   }
 }
