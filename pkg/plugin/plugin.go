@@ -220,6 +220,7 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 	return nil
 }
 
+// encodeURl is hard coded with some variables like scheme and x-api-key but will be definetly refactored after changes in the config editor
 func encodeURL(req *backend.RunStreamRequest) string {
 	apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
 	var reqJsonData map[string]interface{}
