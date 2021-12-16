@@ -3,7 +3,6 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"net/url"
 	"time"
@@ -150,39 +149,26 @@ func (d *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.Su
 // RunStream is called once for any open channel.  Results are shared with everyone
 // subscribed to the same channel.
 func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
-
 	log.DefaultLogger.Info("RunStream called", "request", req)
 
-	apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
-	var reqJsonData map[string]interface{}
-	json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &reqJsonData)
-	host := reqJsonData["host"].(string)
-	params := url.Values{}
-	params.Add("x-api-key", apiKey)
-	u := url.URL{Scheme: "wss", Host: host, Path: req.Path}
-	u.RawQuery = params.Encode()
+	url := encodeURL(req)
 
-	c, err := wsConnect(u.String())
+	c, err := wsConnect(url)
 	if err != nil {
-		log.DefaultLogger.Error("WebSocket Error", "error", err)
+		return err
 	}
 	defer c.Close()
 
-	log.DefaultLogger.Info("golioth websocket connected to ", u.String())
-
-	// Create the same data frame as for query data.
-	frame := data.NewFrame("response")
-	// Add fields (matching the same schema used in QueryData).
-	// frame.Fields = append(frame.Fields,
-	// 	// data.NewField("time", nil, make([]time.Time, 1)),
-	// 	data.NewField("data", nil, make([]string, 1)),
-	// )
-
 	done := make(chan struct{})
 
-	go func() {
+	go func(done chan struct{}) {
+		// Create the same data frame as for query data.
+		frame := data.NewFrame("response")
+
 		m := make(map[string]interface{})
+
 		defer close(done)
+
 		for {
 			select {
 			case <-done:
@@ -190,11 +176,10 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 			default:
 				_, message, _ := c.ReadMessage()
 				if err != nil {
-					c, err := wsConnect(u.String())
+					c, err := wsConnect(url)
 					if err != nil {
-						log.DefaultLogger.Error("WebSocket Error", "error", err)
+						return
 					}
-					log.DefaultLogger.Info("golioth websocket reconnected")
 					defer c.Close()
 				}
 
@@ -203,6 +188,7 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 				frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
 				frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
 
+				// Kept this commented block while in dev mode, will be removed before release
 				// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
 				// frame.Fields = append(frame.Fields, data.NewField("deviceId", nil, []string{logData["deviceId"].(string)}))
 				// newfield := data.NewFieldFromFieldType(data.FieldTypeFor(logData["counter"]), 1)
@@ -210,7 +196,6 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 				// newfield.Set(0, logData["counter"])
 				// log.DefaultLogger.Info("new field: ", newfield)
 				// frame.Fields = append(frame.Fields, newfield)
-
 				// newfield2 := data.NewFieldFromFieldType(data.FieldTypeFor(logData["env"].(map[string]interface{})["test"]), 1)
 				// newfield2.Name = "envTest"
 				// newfield2.Set(0, logData["env"].(map[string]interface{})["test"])
@@ -221,30 +206,43 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 					log.DefaultLogger.Error("Error sending frame", "error", err)
 					continue
 				}
-
 				frame.Fields = make([]*data.Field, 0)
-
 			}
-
 		}
-	}()
+	}(done)
 
 	<-ctx.Done()
 
 	done <- struct{}{}
 
-	log.DefaultLogger.Info("encerrando esse runstream ")
+	log.DefaultLogger.Info("Closing Channel", "channel", req.Path)
 
 	return nil
 }
 
+func encodeURL(req *backend.RunStreamRequest) string {
+	apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
+	var reqJsonData map[string]interface{}
+	json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &reqJsonData)
+	host := reqJsonData["host"].(string)
+	params := url.Values{}
+	params.Add("x-api-key", apiKey)
+	u := url.URL{Scheme: "wss", Host: host, Path: req.Path}
+	u.RawQuery = params.Encode()
+
+	return u.String()
+}
+
 func wsConnect(url string) (*websocket.Conn, error) {
-	log.DefaultLogger.Info("golioth websocket connecting to ", url)
+	log.DefaultLogger.Info("connecting to", "url", url)
 
 	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error opening websocket connection")
+		log.DefaultLogger.Error("webSocket Connection Error", "error", err.Error())
+		return nil, err
 	}
+	log.DefaultLogger.Info("websocket connected to", "url", url)
+
 	return c, nil
 }
 
