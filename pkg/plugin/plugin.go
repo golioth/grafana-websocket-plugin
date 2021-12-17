@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/url"
 	"time"
@@ -72,9 +73,8 @@ func (d *WebSocketDataSource) QueryData(ctx context.Context, req *backend.QueryD
 }
 
 type queryModel struct {
-	WithStreaming bool    `json:"withStreaming"`
-	Constant      float64 `json:"constant"`
-	WsPath        string  `json:"path"`
+	WithStreaming bool   `json:"withStreaming"`
+	WsPath        string `json:"path"`
 }
 
 func (d *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
@@ -151,10 +151,15 @@ func (d *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.Su
 func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
 	log.DefaultLogger.Info("RunStream called", "request", req)
 
-	url := encodeURL(req)
+	url, err := encodeURL(req)
+	if err != nil {
+		log.DefaultLogger.Error("Encode URL Error", "error", err.Error())
+		return err
+	}
 
 	c, err := wsConnect(url)
 	if err != nil {
+		log.DefaultLogger.Error("webSocket Connection Error", "error", err.Error())
 		return err
 	}
 	defer c.Close()
@@ -221,17 +226,46 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 }
 
 // encodeURl is hard coded with some variables like scheme and x-api-key but will be definetly refactored after changes in the config editor
-func encodeURL(req *backend.RunStreamRequest) string {
-	apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
+func encodeURL(req *backend.RunStreamRequest) (string, error) {
 	var reqJsonData map[string]interface{}
-	json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &reqJsonData)
-	host := reqJsonData["host"].(string)
-	params := url.Values{}
-	params.Add("x-api-key", apiKey)
-	u := url.URL{Scheme: "wss", Host: host, Path: req.Path}
-	u.RawQuery = params.Encode()
 
-	return u.String()
+	if err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &reqJsonData); err != nil {
+		return "", fmt.Errorf("failed reading JSON Data Source Instance Settings: %s", err.Error())
+	}
+
+	host := reqJsonData["host"].(string)
+	// with url.Parse it's possible to set Host as "scheme://host/prefixPath" in the Config Editor (more flexibility)
+	// u := url.URL{Scheme: "wss", Host: host, Path: req.Path}
+	wsUrl, err := url.Parse(host)
+	if err != nil {
+		return "", fmt.Errorf("failed parsing host string from Config Editor: %s", err.Error())
+	}
+
+	wsUrl.Path = concatWithoutCharDuplicity(wsUrl.Path, req.Path, "/")
+
+	apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
+	queryParams := url.Values{}
+	queryParams.Add("x-api-key", apiKey)
+	wsUrl.RawQuery = queryParams.Encode()
+
+	return wsUrl.String(), nil
+}
+
+func concatWithoutCharDuplicity(str1, str2, char string) string {
+	if str1 != "" && str2 != "" {
+		str1LastChar := string(str1[len(str1)-1])
+		str2FirstChar := string(str2[0])
+
+		if str1LastChar == char && str2FirstChar == char {
+			return str1 + str2[1:]
+		}
+
+		if str1LastChar != char && str2FirstChar != char {
+			return str1 + char + str2
+		}
+	}
+
+	return str1 + str2
 }
 
 func wsConnect(url string) (*websocket.Conn, error) {
@@ -239,7 +273,6 @@ func wsConnect(url string) (*websocket.Conn, error) {
 
 	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
-		log.DefaultLogger.Error("webSocket Connection Error", "error", err.Error())
 		return nil, err
 	}
 	log.DefaultLogger.Info("websocket connected to", "url", url)
