@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 type wsDataProxy struct {
@@ -124,15 +122,14 @@ func (wsdp *wsDataProxy) readMessage() {
 					log.DefaultLogger.Error("WebSocket Read Message Error", "error", err.Error())
 				}
 			}
-
 			wsdp.msgRead <- message
 		}
 	}
 }
 
 func (wsdp *wsDataProxy) proxyMessage() {
-	frame := data.NewFrame("response")
-	m := make(map[string]interface{})
+	// frame := data.NewFrame("response")
+	// m := make(map[string]interface{})
 
 	for {
 		message, ok := <-wsdp.msgRead
@@ -141,10 +138,10 @@ func (wsdp *wsDataProxy) proxyMessage() {
 			return
 		}
 
-		json.Unmarshal(message, &m)
+		// json.Unmarshal(message, &m)
 
-		frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
-		frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
+		// frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
+		// frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
 
 		// Kept this commented block while in dev mode, will be removed before release
 		// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
@@ -164,7 +161,7 @@ func (wsdp *wsDataProxy) proxyMessage() {
 		if err != nil {
 			log.DefaultLogger.Error("Error sending json", "error", err)
 		}
-		frame.Fields = make([]*data.Field, 0)
+		// frame.Fields = make([]*data.Field, 0)
 	}
 }
 
