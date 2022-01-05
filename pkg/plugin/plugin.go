@@ -152,7 +152,11 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 	}
 	defer wsDataProxy.wsConn.Close()
 
-	go wsDataProxy.startDataProxy()
+	// go wsDataProxy.startDataProxy()
+
+	go wsDataProxy.proxyMessage()
+
+	go wsDataProxy.readMessage()
 
 	<-ctx.Done()
 

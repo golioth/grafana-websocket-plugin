@@ -13,10 +13,11 @@ import (
 )
 
 type wsDataProxy struct {
-	wsUrl  string
-	wsConn *websocket.Conn // conexao ws com o endpoint
-	sender *backend.StreamSender
-	done   chan bool
+	wsUrl   string
+	wsConn  *websocket.Conn // conexao ws com o endpoint
+	msgRead chan []byte
+	sender  *backend.StreamSender
+	done    chan bool
 }
 
 func NewWsDataProxy(req *backend.RunStreamRequest, sender *backend.StreamSender) (*wsDataProxy, error) {
@@ -28,62 +29,142 @@ func NewWsDataProxy(req *backend.RunStreamRequest, sender *backend.StreamSender)
 
 	c, err := wsConnect(url)
 	if err != nil {
-		log.DefaultLogger.Error("webSocket Connection Error", "error", err.Error())
+		log.DefaultLogger.Error("WebSocket Connection Error", "error", err.Error())
 		return nil, err
 	}
 
 	return &wsDataProxy{
-		wsUrl:  url,
-		wsConn: c,
-		sender: sender,
-		done:   make(chan bool, 1),
+		wsUrl:   url,
+		wsConn:  c,
+		msgRead: make(chan []byte),
+		sender:  sender,
+		done:    make(chan bool, 1),
 	}, nil
 }
 
-func (wsp *wsDataProxy) startDataProxy() {
-	defer close(wsp.done)
+// func (wsdp *wsDataProxy) startDataProxy() {
+// 	defer close(wsdp.done)
 
-	frame := data.NewFrame("response")
-	m := make(map[string]interface{})
+// 	frame := data.NewFrame("response")
+// 	m := make(map[string]interface{})
+// 	for {
+// 		select {
+// 		case <-wsdp.done:
+// 			wsdp.wsConn.Close()
+// 			return
+// 		default:
+// 			_, message, err := wsdp.wsConn.ReadMessage()
+// 			if err != nil {
+// 				// if the endpoint is down or if an abnormal closure ocurred
+// 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+// 					log.DefaultLogger.Error("WebSocket Connection Error", "error", err.Error())
+
+// 					wsdp.wsConn, err = wsConnect(wsdp.wsUrl)
+// 					if err != nil {
+// 						return
+// 					}
+// 				}
+
+// 			}
+
+// 			json.Unmarshal(message, &m)
+
+// 			frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
+// 			frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
+
+// 			// Kept this commented block while in dev mode, will be removed before release
+// 			// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
+// 			// frame.Fields = append(frame.Fields, data.NewField("deviceId", nil, []string{logData["deviceId"].(string)}))
+// 			// newfield := data.NewFieldFromFieldType(data.FieldTypeFor(logData["counter"]), 1)
+// 			// newfield.Name = "counter"
+// 			// newfield.Set(0, logData["counter"])
+// 			// log.DefaultLogger.Info("new field: ", newfield)
+// 			// frame.Fields = append(frame.Fields, newfield)
+// 			// newfield2 := data.NewFieldFromFieldType(data.FieldTypeFor(logData["env"].(map[string]interface{})["test"]), 1)
+// 			// newfield2.Name = "envTest"
+// 			// newfield2.Set(0, logData["env"].(map[string]interface{})["test"])
+// 			// log.DefaultLogger.Info("new field: ",calor-demais/devices/61b0b02e95fd466888055ca4/datadashboard")
+
+// 			err = wsdp.sender.SendFrame(frame, data.IncludeAll)
+// 			if err != nil {
+// 				log.DefaultLogger.Error("Error sending frame", "error", err)
+// 				continue
+// 			}
+// 			frame.Fields = make([]*data.Field, 0)
+// 		}
+// 	}
+// }
+
+func (wsdp *wsDataProxy) readMessage() {
+	defer func() {
+		wsdp.wsConn.Close()
+		close(wsdp.msgRead)
+		log.DefaultLogger.Error("Read Message closing read")
+	}()
+
 	for {
 		select {
-		case <-wsp.done:
-			wsp.wsConn.Close()
+		case <-wsdp.done:
 			return
 		default:
-			_, message, err := wsp.wsConn.ReadMessage()
+			_, message, err := wsdp.wsConn.ReadMessage()
 			if err != nil {
-				wsp.wsConn, err = wsConnect(wsp.wsUrl)
-				if err != nil {
-					return
+				// if the endpoint is down or if an abnormal closure ocurred
+				if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.DefaultLogger.Error("WebSocket Connection Error", "error", err.Error())
+
+					wsdp.wsConn, err = wsConnect(wsdp.wsUrl)
+					if err != nil {
+						log.DefaultLogger.Error("WebSocket Reconnection Error", "error", err.Error())
+
+						break
+					}
+				} else {
+					// it can be either antoher possible RFC close errors or more generic errors
+					log.DefaultLogger.Error("WebSocket Read Message Error", "error", err.Error())
 				}
 			}
 
-			json.Unmarshal(message, &m)
-
-			frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
-			frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
-
-			// Kept this commented block while in dev mode, will be removed before release
-			// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
-			// frame.Fields = append(frame.Fields, data.NewField("deviceId", nil, []string{logData["deviceId"].(string)}))
-			// newfield := data.NewFieldFromFieldType(data.FieldTypeFor(logData["counter"]), 1)
-			// newfield.Name = "counter"
-			// newfield.Set(0, logData["counter"])
-			// log.DefaultLogger.Info("new field: ", newfield)
-			// frame.Fields = append(frame.Fields, newfield)
-			// newfield2 := data.NewFieldFromFieldType(data.FieldTypeFor(logData["env"].(map[string]interface{})["test"]), 1)
-			// newfield2.Name = "envTest"
-			// newfield2.Set(0, logData["env"].(map[string]interface{})["test"])
-			// log.DefaultLogger.Info("new field: ",calor-demais/devices/61b0b02e95fd466888055ca4/datadashboard")
-
-			err = wsp.sender.SendFrame(frame, data.IncludeAll)
-			if err != nil {
-				log.DefaultLogger.Error("Error sending frame", "error", err)
-				continue
-			}
-			frame.Fields = make([]*data.Field, 0)
+			wsdp.msgRead <- message
 		}
+	}
+}
+
+func (wsdp *wsDataProxy) proxyMessage() {
+	frame := data.NewFrame("response")
+	m := make(map[string]interface{})
+
+	for {
+		message, ok := <-wsdp.msgRead
+		// if channel was closed
+		if !ok {
+			return
+		}
+
+		json.Unmarshal(message, &m)
+
+		frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
+		frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
+
+		// Kept this commented block while in dev mode, will be removed before release
+		// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
+		// frame.Fields = append(frame.Fields, data.NewField("deviceId", nil, []string{logData["deviceId"].(string)}))
+		// newfield := data.NewFieldFromFieldType(data.FieldTypeFor(logData["counter"]), 1)
+		// newfield.Name = "counter"
+		// newfield.Set(0, logData["counter"])
+		// log.DefaultLogger.Info("new field: ", newfield)
+		// frame.Fields = append(frame.Fields, newfield)
+		// newfield2 := data.NewFieldFromFieldType(data.FieldTypeFor(logData["env"].(map[string]interface{})["test"]), 1)
+		// newfield2.Name = "envTest"
+		// newfield2.Set(0, logData["env"].(map[string]interface{})["test"])
+		// log.DefaultLogger.Info("new field: ",calo// r-demais/devices/61b0b02e95fd466888055ca4/datadashboard")
+
+		// err := wsdp.sender.SendFrame(frame, data.IncludeAll)
+		err := wsdp.sender.SendJSON(message)
+		if err != nil {
+			log.DefaultLogger.Error("Error sending json", "error", err)
+		}
+		frame.Fields = make([]*data.Field, 0)
 	}
 }
 
