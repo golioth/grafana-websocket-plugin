@@ -13,12 +13,19 @@
   },
   "author": "Golioth",
   "license": "Apache-2.0",
+  "dependencies": {
+    "dayjs": "^1.10.4",
+    "jsonpath-plus": "^6.0.1"
+  },
   "devDependencies": {
     "@grafana/data": "latest",
     "@grafana/toolkit": "latest",
     "@grafana/runtime": "latest",
     "@grafana/ui": "latest",
-    "@types/lodash": "latest"
+    "@types/lodash": "latest",
+    "@types/react-virtualized-auto-sizer": "^1.0.0",
+    "emotion": "10.0.27",
+    "react-virtualized-auto-sizer": "^1.0.4"
   },
   "resolutions": {
     "rxjs": "7.3.0"

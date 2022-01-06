@@ -1,7 +1,7 @@
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data'
 import { LegacyForms } from '@grafana/ui'
 import React, { ChangeEvent, FC } from 'react'
-import { DataSourceOptions, SecureJsonData } from './types'
+import { DataSourceOptions, SecureJsonData } from '../types'
 
 const { SecretFormField, FormField } = LegacyForms
 

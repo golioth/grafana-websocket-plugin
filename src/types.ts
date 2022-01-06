@@ -1,20 +1,32 @@
-import { DataQuery, DataSourceJsonData } from '@grafana/data'
+import { DataQuery, DataSourceJsonData, FieldType } from '@grafana/data'
 
-export interface Query extends DataQuery {
-  path?: string
-  withStreaming: boolean
+export type QueryLanguage = 'jsonpath'
+
+export interface QueryField {
+  name?: string
+  jsonPath: string
+  type?: FieldType
+  language?: QueryLanguage
 }
 
-/**
- * These are options configured for each DataSource instance.
- */
+export type Pair<T, K> = [T, K]
+
+export interface Query extends DataQuery {
+  path: string
+  withStreaming: boolean
+  fields: QueryField[]
+}
+
+export const defaultQuery: Partial<Query> = {
+  path: '',
+  fields: [{ jsonPath: '', language: 'jsonpath', name: '' }],
+  withStreaming: true,
+}
+
 export interface DataSourceOptions extends DataSourceJsonData {
   host?: string
 }
 
-/**
- * Value that is used in the backend, but never sent over HTTP to the frontend
- */
 export interface SecureJsonData {
   apiKey?: string
 }
