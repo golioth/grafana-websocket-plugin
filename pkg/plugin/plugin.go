@@ -3,7 +3,10 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"path"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -95,7 +98,7 @@ func (d *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginContex
 		channel := live.Channel{
 			Scope:     live.ScopeDatasource,
 			Namespace: pCtx.DataSourceInstanceSettings.UID,
-			Path:      qm.WsPath,
+			Path:      path.Clean(qm.WsPath),
 		}
 		frame.SetMeta(&data.FrameMeta{Channel: channel.String()})
 	}
@@ -147,10 +150,26 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 
 	wsDataProxy, err := NewWsDataProxy(req, sender)
 	if err != nil {
-		log.DefaultLogger.Error("error instantiating new webSocket data proxy", "error", err.Error())
+		errCtx := "Starting WebSocket"
+
+		log.DefaultLogger.Error(errCtx, "error", err.Error())
+
+		// proxyErr, _ := json.Marshal(fmt.Sprintf("%s: %s", errCtx, err.Error()))
+
+		// frame := data.NewFrame("error")
+		// frame.Fields = append(frame.Fields, data.NewField("error", nil, []string{string(proxyErr)}))
+
+		// serr := sender.SendFrame(frame, data.IncludeAll)
+		// if serr != nil {
+		// 	log.DefaultLogger.Error("Error sending json", "error", serr)
+		// }
+
+		sendErrorFrame(fmt.Sprintf("%s: %s", errCtx, err.Error()), sender)
+
+		time.Sleep(time.Second * 3)
+
 		return err
 	}
-	defer wsDataProxy.wsConn.Close()
 
 	// go wsDataProxy.startDataProxy()
 

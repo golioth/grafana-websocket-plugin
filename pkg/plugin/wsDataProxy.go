@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"path"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 type wsDataProxy struct {
@@ -21,14 +24,12 @@ type wsDataProxy struct {
 func NewWsDataProxy(req *backend.RunStreamRequest, sender *backend.StreamSender) (*wsDataProxy, error) {
 	url, err := encodeURL(req)
 	if err != nil {
-		log.DefaultLogger.Error("Encode URL Error", "error", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("encode URL Error: %s", err.Error())
 	}
 
 	c, err := wsConnect(url)
 	if err != nil {
-		log.DefaultLogger.Error("WebSocket Connection Error", "error", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("connection Error: %s", err.Error())
 	}
 
 	return &wsDataProxy{
@@ -97,7 +98,6 @@ func (wsdp *wsDataProxy) readMessage() {
 	defer func() {
 		wsdp.wsConn.Close()
 		close(wsdp.msgRead)
-		log.DefaultLogger.Error("Read Message closing read")
 	}()
 
 	for {
@@ -106,30 +106,36 @@ func (wsdp *wsDataProxy) readMessage() {
 			return
 		default:
 			_, message, err := wsdp.wsConn.ReadMessage()
+
 			if err != nil {
 				// if the endpoint is down or if an abnormal closure ocurred
-				if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.DefaultLogger.Error("WebSocket Connection Error", "error", err.Error())
+				if websocket.IsCloseError(err, websocket.CloseGoingAway) {
+					log.DefaultLogger.Error("Disconnection Error", "error", err.Error())
+
+					sendErrorFrame(fmt.Sprintf("%s: %s", "Disconnection Error", err.Error()), wsdp.sender)
 
 					wsdp.wsConn, err = wsConnect(wsdp.wsUrl)
 					if err != nil {
-						log.DefaultLogger.Error("WebSocket Reconnection Error", "error", err.Error())
-
-						break
+						log.DefaultLogger.Error("Reconnection Error", "error", err.Error())
 					}
+
 				} else {
 					// it can be either antoher possible RFC close errors or more generic errors
 					log.DefaultLogger.Error("WebSocket Read Message Error", "error", err.Error())
+
+					sendErrorFrame(fmt.Sprintf("%s: %s", "Read WebSocket Error", err.Error()), wsdp.sender)
 				}
+				time.Sleep(time.Second * 3)
+			} else {
+				wsdp.msgRead <- message
 			}
-			wsdp.msgRead <- message
 		}
 	}
 }
 
 func (wsdp *wsDataProxy) proxyMessage() {
-	// frame := data.NewFrame("response")
-	// m := make(map[string]interface{})
+	frame := data.NewFrame("response")
+	m := make(map[string]interface{})
 
 	for {
 		message, ok := <-wsdp.msgRead
@@ -138,10 +144,10 @@ func (wsdp *wsDataProxy) proxyMessage() {
 			return
 		}
 
-		// json.Unmarshal(message, &m)
+		json.Unmarshal(message, &m)
 
-		// frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
-		// frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
+		frame.Fields = append(frame.Fields, data.NewField("pTime", nil, []time.Time{time.Now()}))
+		frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
 
 		// Kept this commented block while in dev mode, will be removed before release
 		// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
@@ -156,12 +162,11 @@ func (wsdp *wsDataProxy) proxyMessage() {
 		// newfield2.Set(0, logData["env"].(map[string]interface{})["test"])
 		// log.DefaultLogger.Info("new field: ",calo// r-demais/devices/61b0b02e95fd466888055ca4/datadashboard")
 
-		// err := wsdp.sender.SendFrame(frame, data.IncludeAll)
-		err := wsdp.sender.SendJSON(message)
+		err := wsdp.sender.SendFrame(frame, data.IncludeAll)
 		if err != nil {
-			log.DefaultLogger.Error("Error sending json", "error", err)
+			log.DefaultLogger.Error("Error sending frame", "error", err)
 		}
-		// frame.Fields = make([]*data.Field, 0)
+		frame.Fields = make([]*data.Field, 0)
 	}
 }
 
@@ -181,7 +186,8 @@ func encodeURL(req *backend.RunStreamRequest) (string, error) {
 		return "", fmt.Errorf("failed parsing host string from Config Editor: %s", err.Error())
 	}
 
-	wsUrl.Path = concatWithoutCharDuplicity(wsUrl.Path, req.Path, "/")
+	// wsUrl.Path = concatWithoutCharDuplicity(wsUrl.Path, req.Path, "/")
+	wsUrl.Path = path.Join(wsUrl.Path, req.Path)
 
 	apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
 	queryParams := url.Values{}
@@ -191,22 +197,22 @@ func encodeURL(req *backend.RunStreamRequest) (string, error) {
 	return wsUrl.String(), nil
 }
 
-func concatWithoutCharDuplicity(str1, str2, char string) string {
-	if str1 != "" && str2 != "" {
-		str1LastChar := string(str1[len(str1)-1])
-		str2FirstChar := string(str2[0])
+// func concatWithoutCharDuplicity(str1, str2, char string) string {
+// 	if str1 != "" && str2 != "" {
+// 		str1LastChar := string(str1[len(str1)-1])
+// 		str2FirstChar := string(str2[0])
 
-		if str1LastChar == char && str2FirstChar == char {
-			return str1 + str2[1:]
-		}
+// 		if str1LastChar == char && str2FirstChar == char {
+// 			return str1 + str2[1:]
+// 		}
 
-		if str1LastChar != char && str2FirstChar != char {
-			return str1 + char + str2
-		}
-	}
+// 		if str1LastChar != char && str2FirstChar != char {
+// 			return str1 + char + str2
+// 		}
+// 	}
 
-	return str1 + str2
-}
+// 	return str1 + str2
+// }
 
 func wsConnect(url string) (*websocket.Conn, error) {
 	log.DefaultLogger.Info("connecting to", "url", url)
@@ -218,4 +224,14 @@ func wsConnect(url string) (*websocket.Conn, error) {
 	log.DefaultLogger.Info("websocket connected to", "url", url)
 
 	return c, nil
+}
+
+func sendErrorFrame(msg string, sender *backend.StreamSender) {
+	frame := data.NewFrame("error")
+	frame.Fields = append(frame.Fields, data.NewField("error", nil, []string{msg}))
+
+	serr := sender.SendFrame(frame, data.IncludeAll)
+	if serr != nil {
+		log.DefaultLogger.Error("Error to send error frame", "error", serr)
+	}
 }
