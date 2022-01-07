@@ -6,6 +6,7 @@ import {
   DataQueryResponse,
   DataSourceInstanceSettings,
   Field,
+  LoadingState,
   ScopedVars,
   TimeRange,
 } from '@grafana/data'
@@ -54,11 +55,34 @@ export class DataSource extends DataSourceWithBackend<
           const key = `${dashboardId}/${panelId}/${eventChannel}`
           const eventBindingKey = key || event.key
 
+          const errors = newFrames
+            .filter(f => !!f.meta?.custom)
+            .map(frame => frame.meta?.custom)
+
+          const errorMsg = errors.length
+            ? `Some queries returned an error: \n 
+              ${errors
+                .map(error => `Query ${error?.refId} - ${error?.error}`)
+                .join('\n')}`
+            : undefined
+
           const newEvent = {
             ...event,
             data: newFrames,
             key: queries.length > 1 ? eventBindingKey : event.key,
+            state: LoadingState.Streaming,
+            error: errorMsg
+              ? {
+                  message: errorMsg
+                    ? 'Streaming error: click to see details'
+                    : undefined,
+                  data: {
+                    message: errorMsg,
+                  },
+                }
+              : undefined,
           }
+
           return newEvent
         }
 
@@ -73,32 +97,48 @@ export class DataSource extends DataSourceWithBackend<
     scopedVars: ScopedVars,
     range: TimeRange,
   ): DataFrame => {
-    // casted to any to avoid typescript Vector[] error
+    const { refId } = query
+    if (query?.fields.length === 0) return { ...eventFrame, refId }
+
+    // casted to any to avoid typescript Vector<any> error
     const eventFields = eventFrame.fields as any[]
+
     const eventValues = eventFields
-      .find(f => f.type !== 'time')
+      .find(f => f.name === 'data')
       ?.values.map((v: string) => {
         try {
-          JSON.parse(v)
+          return JSON.parse(v)
         } catch (e) {
-          throw new Error(`Invalid JSON: ${v}`)
+          throw new Error(`Invalid JSON: ${v}. Error: ${e}`)
         }
       })
 
-    if (!eventValues || query?.fields.length === 0)
-      return { ...eventFrame, refId: query.refId }
-
-    if (eventValues.error)
-      throw new Error('Something went wrong: ' + eventValues.error)
-
     const newFields = query?.fields
       .filter(field => field.jsonPath)
-      .map(field => this.transformFields(field, eventValues, scopedVars, range))
+      .map(field => this.transformFields(field, scopedVars, range, eventValues))
+
+    if (eventFields.find(field => field.name === 'error')) {
+      const errorMsg = eventFields.find(field => field.name === 'error')
+        ?.values[0]
+
+      return {
+        ...eventFrame,
+        refId,
+        fields: newFields,
+        meta: {
+          ...eventFrame.meta,
+          custom: {
+            error: errorMsg,
+            refId,
+          },
+        },
+      }
+    }
 
     const newFrame = {
       ...eventFrame,
-      refId: query.refId,
-      fields: newFields ?? eventFrame.fields,
+      refId,
+      fields: newFields ?? eventFields,
     }
 
     return newFrame
@@ -106,13 +146,13 @@ export class DataSource extends DataSourceWithBackend<
 
   transformFields = (
     field: QueryField,
-    eventValues: Record<string, unknown>[],
     scopedVars: ScopedVars,
     range: TimeRange,
+    eventValues?: Record<string, unknown>[],
   ): Field => {
     const replaceWithVars = replace(scopedVars, range)
     const path = replaceWithVars(field.jsonPath)
-    const values = eventValues.flatMap(json => JSONPath({ path, json }))
+    const values = eventValues?.flatMap(json => JSONPath({ path, json })) ?? []
 
     // Get the path for automatic setting of the field name.
     const paths = JSONPath.toPathArray(path)
@@ -128,11 +168,6 @@ export class DataSource extends DataSourceWithBackend<
     }
   }
 }
-
-// const getQueryByRefId = (queries: Query[], refId?: string) => {
-//   if (refId === undefined) return queries[0]
-//   return queries.find(query => query.refId === refId)
-// }
 
 const replace = (scopedVars?: ScopedVars, range?: TimeRange) => (
   str: string,
