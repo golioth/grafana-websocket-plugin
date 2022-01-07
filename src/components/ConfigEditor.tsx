@@ -1,47 +1,22 @@
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data'
 import { LegacyForms } from '@grafana/ui'
 import React, { ChangeEvent, FC } from 'react'
-import { DataSourceOptions, SecureJsonData } from '../types'
+import { DataSourceOptions } from '../types'
 import CustomHeadersSettings from './fields/CustomHeadersField'
 import CustomQueryParamsSettings from './fields/CustomQueryParamsField'
 
-const { SecretFormField, FormField } = LegacyForms
+const { FormField } = LegacyForms
 
 type Props = DataSourcePluginOptionsEditorProps<DataSourceOptions>
 
 export const ConfigEditor: FC<Props> = ({ options, onOptionsChange }) => {
-  const { jsonData, secureJsonFields } = options
-  const secureJsonData = (options.secureJsonData || {}) as SecureJsonData
+  const { jsonData } = options
   const onHostChange = (event: ChangeEvent<HTMLInputElement>) => {
     const jsonData = {
       ...options.jsonData,
       host: event.target.value,
     }
     onOptionsChange({ ...options, jsonData })
-  }
-
-  // Secure field (only sent to the backend)
-  const onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onOptionsChange({
-      ...options,
-      secureJsonData: {
-        apiKey: event.target.value,
-      },
-    })
-  }
-
-  const onResetAPIKey = () => {
-    onOptionsChange({
-      ...options,
-      secureJsonFields: {
-        ...options.secureJsonFields,
-        apiKey: false,
-      },
-      secureJsonData: {
-        ...options.secureJsonData,
-        apiKey: '',
-      },
-    })
   }
 
   return (
