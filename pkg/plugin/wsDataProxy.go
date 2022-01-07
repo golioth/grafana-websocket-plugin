@@ -41,59 +41,6 @@ func NewWsDataProxy(req *backend.RunStreamRequest, sender *backend.StreamSender)
 	}, nil
 }
 
-// func (wsdp *wsDataProxy) startDataProxy() {
-// 	defer close(wsdp.done)
-
-// 	frame := data.NewFrame("response")
-// 	m := make(map[string]interface{})
-// 	for {
-// 		select {
-// 		case <-wsdp.done:
-// 			wsdp.wsConn.Close()
-// 			return
-// 		default:
-// 			_, message, err := wsdp.wsConn.ReadMessage()
-// 			if err != nil {
-// 				// if the endpoint is down or if an abnormal closure ocurred
-// 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-// 					log.DefaultLogger.Error("WebSocket Connection Error", "error", err.Error())
-
-// 					wsdp.wsConn, err = wsConnect(wsdp.wsUrl)
-// 					if err != nil {
-// 						return
-// 					}
-// 				}
-
-// 			}
-
-// 			json.Unmarshal(message, &m)
-
-// 			frame.Fields = append(frame.Fields, data.NewField("time", nil, []time.Time{time.Now()}))
-// 			frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
-
-// 			// Kept this commented block while in dev mode, will be removed before release
-// 			// logData := m["result"].(map[string]interface{})["data"].(map[string]interface{})
-// 			// frame.Fields = append(frame.Fields, data.NewField("deviceId", nil, []string{logData["deviceId"].(string)}))
-// 			// newfield := data.NewFieldFromFieldType(data.FieldTypeFor(logData["counter"]), 1)
-// 			// newfield.Name = "counter"
-// 			// newfield.Set(0, logData["counter"])
-// 			// log.DefaultLogger.Info("new field: ", newfield)
-// 			// frame.Fields = append(frame.Fields, newfield)
-// 			// newfield2 := data.NewFieldFromFieldType(data.FieldTypeFor(logData["env"].(map[string]interface{})["test"]), 1)
-// 			// newfield2.Name = "envTest"
-// 			// newfield2.Set(0, logData["env"].(map[string]interface{})["test"])
-// 			// log.DefaultLogger.Info("new field: ",calor-demais/devices/61b0b02e95fd466888055ca4/datadashboard")
-
-// 			err = wsdp.sender.SendFrame(frame, data.IncludeAll)
-// 			if err != nil {
-// 				log.DefaultLogger.Error("Error sending frame", "error", err)
-// 				continue
-// 			}
-// 			frame.Fields = make([]*data.Field, 0)
-// 		}
-// 	}
-// }
-
 func (wsdp *wsDataProxy) readMessage() {
 	defer func() {
 		wsdp.wsConn.Close()
@@ -146,7 +93,7 @@ func (wsdp *wsDataProxy) proxyMessage() {
 
 		json.Unmarshal(message, &m)
 
-		frame.Fields = append(frame.Fields, data.NewField("pTime", nil, []time.Time{time.Now()}))
+		// frame.Fields = append(frame.Fields, data.NewField("pTime", nil, []time.Time{time.Now()}))
 		frame.Fields = append(frame.Fields, data.NewField("data", nil, []string{string(message)}))
 
 		// Kept this commented block while in dev mode, will be removed before release
@@ -196,23 +143,6 @@ func encodeURL(req *backend.RunStreamRequest) (string, error) {
 
 	return wsUrl.String(), nil
 }
-
-// func concatWithoutCharDuplicity(str1, str2, char string) string {
-// 	if str1 != "" && str2 != "" {
-// 		str1LastChar := string(str1[len(str1)-1])
-// 		str2FirstChar := string(str2[0])
-
-// 		if str1LastChar == char && str2FirstChar == char {
-// 			return str1 + str2[1:]
-// 		}
-
-// 		if str1LastChar != char && str2FirstChar != char {
-// 			return str1 + char + str2
-// 		}
-// 	}
-
-// 	return str1 + str2
-// }
 
 func wsConnect(url string) (*websocket.Conn, error) {
 	log.DefaultLogger.Info("connecting to", "url", url)

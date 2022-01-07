@@ -154,24 +154,12 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 
 		log.DefaultLogger.Error(errCtx, "error", err.Error())
 
-		// proxyErr, _ := json.Marshal(fmt.Sprintf("%s: %s", errCtx, err.Error()))
-
-		// frame := data.NewFrame("error")
-		// frame.Fields = append(frame.Fields, data.NewField("error", nil, []string{string(proxyErr)}))
-
-		// serr := sender.SendFrame(frame, data.IncludeAll)
-		// if serr != nil {
-		// 	log.DefaultLogger.Error("Error sending json", "error", serr)
-		// }
-
 		sendErrorFrame(fmt.Sprintf("%s: %s", errCtx, err.Error()), sender)
 
 		time.Sleep(time.Second * 3)
 
 		return err
 	}
-
-	// go wsDataProxy.startDataProxy()
 
 	go wsDataProxy.proxyMessage()
 
