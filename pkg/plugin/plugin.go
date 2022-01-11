@@ -32,27 +32,40 @@ var (
 )
 
 // NewWebSocketDataSource creates a new datasource instance.
-func NewWebSocketDataSource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	return &WebSocketDataSource{}, nil
+func NewWebSocketDataSource(ds backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	log.DefaultLogger.Info("DataSource Settings", "ds", ds)
+
+	customSettings, err := NewCustomSettings(ds.JSONData, ds.DecryptedSecureJSONData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CustomSettings from the Query Request: %s", err.Error())
+	}
+
+	return &WebSocketDataSource{
+		customHeaders:         customSettings.headers,
+		customQueryParameters: customSettings.queryParameters,
+	}, nil
 }
 
 // WebSocketDataSource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type WebSocketDataSource struct {
+	customHeaders         mapStrings
+	customQueryParameters mapStrings
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
 // be disposed and a new one will be created using NewWebSocketDataSource factory function.
-func (d *WebSocketDataSource) Dispose() {
+func (wsds *WebSocketDataSource) Dispose() {
 	// Clean up datasource instance resources.
+	log.DefaultLogger.Info("Dispose Method", "disposing instance")
 }
 
 // QueryData handles multiple queries and returns multiple responses.
 // req contains the queries []DataQuery (where each query contains RefID as a unique identifier).
 // The QueryDataResponse contains a map of RefID to the response for each query, and each response
 // contains Frames ([]*Frame).
-func (d *WebSocketDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+func (wsds *WebSocketDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	log.DefaultLogger.Info("QueryData called", "request", req)
 
 	// create response struct
@@ -60,7 +73,7 @@ func (d *WebSocketDataSource) QueryData(ctx context.Context, req *backend.QueryD
 
 	// loop over queries and execute them individually.
 	for _, q := range req.Queries {
-		res := d.query(ctx, req.PluginContext, q)
+		res := wsds.query(ctx, req.PluginContext, q)
 
 		// save the response in a hashmap
 		// based on with RefID as identifier
@@ -76,7 +89,7 @@ type queryModel struct {
 	WsPath        string `json:"path"`
 }
 
-func (d *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
+func (wsds *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
 	log.DefaultLogger.Info("query called", "pluginCtx", pCtx)
 	log.DefaultLogger.Info("query called", "query", query)
 	response := backend.DataResponse{}
@@ -113,7 +126,7 @@ func (d *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginContex
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *WebSocketDataSource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (wsds *WebSocketDataSource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called", "request", req)
 
 	var status = backend.HealthStatusOk
@@ -132,7 +145,7 @@ func (d *WebSocketDataSource) CheckHealth(_ context.Context, req *backend.CheckH
 
 // SubscribeStream is called when a client wants to connect to a stream. This callback
 // allows sending the first message.
-func (d *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
+func (wsds *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
 	log.DefaultLogger.Info("SubscribeStream called", "request", req)
 
 	// status := backend.SubscribeStreamStatusPermissionDenied
@@ -145,10 +158,13 @@ func (d *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.Su
 
 // RunStream is called once for any open channel.  Results are shared with everyone
 // subscribed to the same channel.
-func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
+func (wsds *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
 	log.DefaultLogger.Info("RunStream called", "request", req)
 
-	wsDataProxy, err := NewWsDataProxy(req, sender)
+	log.DefaultLogger.Info("JSONData", req.PluginContext.DataSourceInstanceSettings.JSONData)
+	log.DefaultLogger.Info("DecryptedSecureJSONData", req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData)
+
+	wsDataProxy, err := NewWsDataProxy(req, sender, wsds)
 	if err != nil {
 		errCtx := "Starting WebSocket"
 
@@ -175,7 +191,7 @@ func (d *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStr
 }
 
 // PublishStream is called when a client sends a message to the stream.
-func (d *WebSocketDataSource) PublishStream(_ context.Context, req *backend.PublishStreamRequest) (*backend.PublishStreamResponse, error) {
+func (wsds *WebSocketDataSource) PublishStream(_ context.Context, req *backend.PublishStreamRequest) (*backend.PublishStreamResponse, error) {
 	log.DefaultLogger.Info("PublishStream called", "request", req)
 
 	// Do not allow publishing at all.
