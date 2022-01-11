@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"path"
 	"time"
 
@@ -127,10 +126,40 @@ func (wsds *WebSocketDataSource) CheckHealth(_ context.Context, req *backend.Che
 	var status = backend.HealthStatusOk
 	var message = "Data source is working"
 
-	if rand.Int()%2 == 0 {
-		status = backend.HealthStatusError
-		message = "randomized error"
-	}
+	// var jsonData map[string]string
+	// if err := json.Unmarshal(req.PluginContext.AppInstanceSettings.JSONData, &jsonData); err != nil {
+	// 	log.DefaultLogger.Error("Health Check", "Unmarshall JsonData check", err.Error())
+	// 	return &backend.CheckHealthResult{
+	// 		Status:  backend.HealthStatusError,
+	// 		Message: err.Error(),
+	// 	}, err
+	// }
+
+	// checkHost := func(host string) error {
+	// 	_, err := url.Parse(host)
+	// 	log.DefaultLogger.Error("Health Check func", "host check func", err.Error())
+	// 	if err != nil {
+	// 		return fmt.Errorf("host is not valid: %s", err.Error())
+	// 	}
+	// 	return nil
+	// }
+
+	// // if err := checkHost(string(jsonData["host"])); err != nil {
+	// if err := checkHost("tes.com"); err != nil {
+	// 	log.DefaultLogger.Error("Health Check", "host check", err.Error())
+	// 	return &backend.CheckHealthResult{
+	// 		Status:  backend.HealthStatusError,
+	// 		Message: err.Error(),
+	// 	}, err
+	// }
+
+	// else if err := checkCustomHeaders(); err != nil {
+	// 	status = backend.HealthStatusError
+	// 	message = err.Error()
+	// } else if err := checkCustomQueryParameters(); err != nil {
+	// 	status = backend.HealthStatusError
+	// 	message = err.Error()
+	// }
 
 	return &backend.CheckHealthResult{
 		Status:  status,

@@ -159,12 +159,11 @@ func (wsdp *wsDataProxy) wsConnect() (*websocket.Conn, error) {
 	log.DefaultLogger.Info("connecting to", "url", wsdp.wsUrl)
 
 	customHeaders := http.Header{}
-	log.DefaultLogger.Info("wsConnect", "customHeaders", customHeaders)
 	for headerName, headerValue := range wsdp.wsDataSource.customHeaders {
 		customHeaders.Add(headerName, headerValue)
 	}
 
-	// log.DefaultLogger.Info("wsConnect", "customHeaders", fmt.Sprintf("%v", customHeaders))
+	log.DefaultLogger.Info("wsConnect", "customHeaders", fmt.Sprintf("%v", customHeaders))
 	// log.DefaultLogger.Info("wsConnect", "teste", "teste")
 
 	c, _, err := websocket.DefaultDialer.Dial(wsdp.wsUrl, customHeaders)
