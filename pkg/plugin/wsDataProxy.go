@@ -24,14 +24,7 @@ type wsDataProxy struct {
 }
 
 func NewWsDataProxy(req *backend.RunStreamRequest, sender *backend.StreamSender, ds *WebSocketDataSource) (*wsDataProxy, error) {
-	// customSettings, err := NewCustomSettings(req.PluginContext.DataSourceInstanceSettings.JSONData, req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to read CustomSettings from the Query Request: %s", err.Error())
-	// }
-
 	wsDataProxy := &wsDataProxy{
-		// wsUrl:        url,
-		// wsConn:       c,
 		msgRead:      make(chan []byte),
 		sender:       sender,
 		done:         make(chan bool, 1),
@@ -148,9 +141,7 @@ func (wsdp *wsDataProxy) encodeURL(req *backend.RunStreamRequest) (string, error
 	// wsUrl.Path = concatWithoutCharDuplicity(wsUrl.Path, req.Path, "/")
 	wsUrl.Path = path.Join(wsUrl.Path, req.Path)
 
-	// apiKey := req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["apiKey"]
 	queryParams := url.Values{}
-	// queryParams.Add("x-api-key", apiKey)
 
 	// add all query parameters to the URL
 	for qpName, qpValue := range wsdp.wsDataSource.customQueryParameters {
@@ -158,8 +149,8 @@ func (wsdp *wsDataProxy) encodeURL(req *backend.RunStreamRequest) (string, error
 	}
 	wsUrl.RawQuery = queryParams.Encode()
 
-	log.DefaultLogger.Info("Encode URl", "Custom Settings headers", wsdp.wsDataSource.customHeaders)
-	log.DefaultLogger.Info("Encode URl", "Custom Settings queryParameters", wsdp.wsDataSource.customQueryParameters)
+	// log.DefaultLogger.Info("Encode URl", "Custom Settings headers", wsdp.wsDataSource.customHeaders)
+	// log.DefaultLogger.Info("Encode URl", "Custom Settings queryParameters", wsdp.wsDataSource.customQueryParameters)
 
 	return wsUrl.String(), nil
 }
@@ -173,8 +164,8 @@ func (wsdp *wsDataProxy) wsConnect() (*websocket.Conn, error) {
 		customHeaders.Add(headerName, headerValue)
 	}
 
-	log.DefaultLogger.Info("wsConnect", "customHeaders", fmt.Sprintf("%v", customHeaders))
-	log.DefaultLogger.Info("wsConnect", "teste", "teste")
+	// log.DefaultLogger.Info("wsConnect", "customHeaders", fmt.Sprintf("%v", customHeaders))
+	// log.DefaultLogger.Info("wsConnect", "teste", "teste")
 
 	c, _, err := websocket.DefaultDialer.Dial(wsdp.wsUrl, customHeaders)
 	if err != nil {

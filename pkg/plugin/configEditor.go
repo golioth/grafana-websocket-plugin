@@ -54,6 +54,7 @@ func (cs *customSettings) getCustomSettingValue(settingName string) string {
 		suffixSettingName = prefixAndSuffix[1]
 	}
 
+	// decryptedSecureJSONData has the respective values of each header and query parameter name in the jsonData
 	settingValue, exists := cs.decryptedSecureJSONData[prefixSettingName+"Value"+suffixSettingName]
 	if !exists {
 		return "custom setting not found"

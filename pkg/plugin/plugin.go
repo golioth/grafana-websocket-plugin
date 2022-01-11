@@ -33,8 +33,6 @@ var (
 
 // NewWebSocketDataSource creates a new datasource instance.
 func NewWebSocketDataSource(ds backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	log.DefaultLogger.Info("DataSource Settings", "ds", ds)
-
 	customSettings, err := NewCustomSettings(ds.JSONData, ds.DecryptedSecureJSONData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CustomSettings from the Query Request: %s", err.Error())
@@ -90,8 +88,6 @@ type queryModel struct {
 }
 
 func (wsds *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
-	log.DefaultLogger.Info("query called", "pluginCtx", pCtx)
-	log.DefaultLogger.Info("query called", "query", query)
 	response := backend.DataResponse{}
 
 	// Unmarshal the JSON into our queryModel.
@@ -117,7 +113,6 @@ func (wsds *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginCon
 	}
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
-	log.DefaultLogger.Info("query called", "response", response)
 
 	return response
 }
@@ -146,7 +141,7 @@ func (wsds *WebSocketDataSource) CheckHealth(_ context.Context, req *backend.Che
 // SubscribeStream is called when a client wants to connect to a stream. This callback
 // allows sending the first message.
 func (wsds *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
-	log.DefaultLogger.Info("SubscribeStream called", "request", req)
+	log.DefaultLogger.Info("SubscribeStream called", "Path", req.Path)
 
 	// status := backend.SubscribeStreamStatusPermissionDenied
 	status := backend.SubscribeStreamStatusOK
@@ -159,10 +154,7 @@ func (wsds *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend
 // RunStream is called once for any open channel.  Results are shared with everyone
 // subscribed to the same channel.
 func (wsds *WebSocketDataSource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
-	log.DefaultLogger.Info("RunStream called", "request", req)
-
-	log.DefaultLogger.Info("JSONData", req.PluginContext.DataSourceInstanceSettings.JSONData)
-	log.DefaultLogger.Info("DecryptedSecureJSONData", req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData)
+	log.DefaultLogger.Info("RunStream called", "Path", req.Path)
 
 	wsDataProxy, err := NewWsDataProxy(req, sender, wsds)
 	if err != nil {
@@ -192,8 +184,6 @@ func (wsds *WebSocketDataSource) RunStream(ctx context.Context, req *backend.Run
 
 // PublishStream is called when a client sends a message to the stream.
 func (wsds *WebSocketDataSource) PublishStream(_ context.Context, req *backend.PublishStreamRequest) (*backend.PublishStreamResponse, error) {
-	log.DefaultLogger.Info("PublishStream called", "request", req)
-
 	// Do not allow publishing at all.
 	return &backend.PublishStreamResponse{
 		Status: backend.PublishStreamStatusPermissionDenied,
