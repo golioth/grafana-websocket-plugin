@@ -23,8 +23,8 @@ import (
 // is useful to clean up resources used by previous datasource instance when a new datasource
 // instance created upon datasource settings changed.
 var (
-	_ backend.QueryDataHandler = (*WebSocketDataSource)(nil)
-	// _ backend.CheckHealthHandler    = (*WebSocketDataSource)(nil)
+	_ backend.QueryDataHandler      = (*WebSocketDataSource)(nil)
+	_ backend.CheckHealthHandler    = (*WebSocketDataSource)(nil)
 	_ backend.StreamHandler         = (*WebSocketDataSource)(nil)
 	_ instancemgmt.InstanceDisposer = (*WebSocketDataSource)(nil)
 )
