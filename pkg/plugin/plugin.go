@@ -98,14 +98,12 @@ func (wsds *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginCon
 	// If query called with streaming on then return a channel
 	// to subscribe on a client-side and consume updates from a plugin.
 	// Feel free to remove this if you don't need streaming for your datasource.
-	if qm.WithStreaming {
 		channel := live.Channel{
 			Scope:     live.ScopeDatasource,
 			Namespace: pCtx.DataSourceInstanceSettings.UID,
 			Path:      path.Clean(qm.WsPath),
 		}
 		frame.SetMeta(&data.FrameMeta{Channel: channel.String()})
-	}
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 
