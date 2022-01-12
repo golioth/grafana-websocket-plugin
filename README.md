@@ -14,6 +14,22 @@ For more information about backend plugins, refer to the documentation on [Backe
 
 A data source backend plugin consists of both frontend and backend components.
 
+### Setup Plugin Directory
+
+1. Create directory:
+
+   ```bash
+   mkdir -p ~/Golioth/Codes/grafana-plugins/grafana-websocket-plugin
+   ```
+
+2. Clone this repo into the new directory and update to `develop` branch:
+   
+   ```bash
+   cd ~/Golioth/Codes/grafana-plugins/grafana-websocket-plugin
+   git clone git@github.com:golioth/grafana-websocket-plugin.git .
+   git checkout develop
+   ```
+
 ### Frontend
 
 1. Install dependencies
@@ -60,6 +76,58 @@ A data source backend plugin consists of both frontend and backend components.
    ```bash
    mage -l
    ```
+
+### Run the Grafana
+
+1. Start the docker container
+
+   ```bash
+   docker run -d --network="host" -e "GF_LOG_MODE=console file" -p 3000:3000 -v ~/Golioth/Codes/grafana-plugins:/var/lib/grafana/plugins --name=grafana grafana/grafana
+   ```
+
+2. Load the GUI in your browser:
+   * [http://localhost:3000](http://localhost:3000)
+   * user: admin
+   * password: admin
+   * Grafana will ask you to change the password on first login
+
+### Configure Data Source
+
+1. Add websockets data source in Grafana
+   * Click the gear icon on the left sidebar and choose "data sources"
+   * Click "Add data source"
+   * Scroll to the bottom and chose "WebSocket API" in the "Others" category. (If this entry is not an option, you may have a problem with allowing unsigned sources.)
+
+2. Input WebSocket API information
+
+   ![Grafana Websockets Configuration](assets/golioth-grafana-websockets-plugin-datasource.png)
+
+   * WebSocket Host should use this format: `wss://api.golioth.io/v1/ws/projects/{project-id}`
+   * Query Parameters key must be `x-api-key`
+   * Value will be your API key from the [Golioth Console](https://console.golioth.io)
+
+3. Add a panel to Grafana Dashboard
+
+   * Click `+` in the left sidbar. Choose "Dashboard" --> "Add a new panel"
+   * In the bottom left, set "Fields" to `$`
+   * Click the "Path" tab and set to `/stream`
+   * Click the "Table view" toggle at the top of the window
+   * Any data currently coming in on your project's lightDB stream will begin showing as JSON
+
+   ![Graphana showing lightDB stream json packets](assets/grafana-websockets-plugin-streaming.png)
+
+### Sample Data Source and Customizing Your Data View
+
+1. [Golioth's light DB stream sample](https://github.com/golioth/zephyr-sdk/tree/main/samples/lightdb_stream) is a perfect data source for this demo. It will provide varying temperature values for Grafana to graph
+
+2. Use two Field values to choose how the data is graphed (use the `+` on the right of the Field entry to add a second key):
+
+   * `$.result.data.timestamp`
+   * `$.result.data.data.temp`
+
+3. Choose "Time series" from the upper right "Visualizations" list.
+
+   ![Graphana Websockets Graph](assets/grafana-websockets-graphing.png)
 
 ## Learn more
 
