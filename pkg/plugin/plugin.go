@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -186,8 +185,6 @@ func (wsds *WebSocketDataSource) RunStream(ctx context.Context, req *backend.Run
 		log.DefaultLogger.Error(errCtx, "error", err.Error())
 
 		sendErrorFrame(fmt.Sprintf("%s: %s", errCtx, err.Error()), sender)
-
-		time.Sleep(time.Second * 3)
 
 		return err
 	}
