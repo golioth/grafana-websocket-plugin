@@ -46,8 +46,8 @@ func NewWebSocketDataSource(ds backend.DataSourceInstanceSettings) (instancemgmt
 // WebSocketDataSource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type WebSocketDataSource struct {
-	customHeaders         mapStrings
-	customQueryParameters mapStrings
+	customHeaders         settings
+	customQueryParameters settings
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -63,8 +63,6 @@ func (wsds *WebSocketDataSource) Dispose() {
 // The QueryDataResponse contains a map of RefID to the response for each query, and each response
 // contains Frames ([]*Frame).
 func (wsds *WebSocketDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	log.DefaultLogger.Info("QueryData called", "request", req)
-
 	// create response struct
 	response := backend.NewQueryDataResponse()
 
@@ -77,7 +75,6 @@ func (wsds *WebSocketDataSource) QueryData(ctx context.Context, req *backend.Que
 		response.Responses[q.RefID] = res
 	}
 
-	log.DefaultLogger.Info("QueryData called", "response", response)
 	return response, nil
 }
 
@@ -170,9 +167,6 @@ func (wsds *WebSocketDataSource) CheckHealth(_ context.Context, req *backend.Che
 // SubscribeStream is called when a client wants to connect to a stream. This callback
 // allows sending the first message.
 func (wsds *WebSocketDataSource) SubscribeStream(_ context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
-	log.DefaultLogger.Info("SubscribeStream called", "Path", req.Path)
-
-	// status := backend.SubscribeStreamStatusPermissionDenied
 	status := backend.SubscribeStreamStatusOK
 
 	return &backend.SubscribeStreamResponse{

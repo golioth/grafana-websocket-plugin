@@ -6,17 +6,17 @@ import (
 	"strings"
 )
 
-type mapStrings map[string]string
+type settings map[string]string
 
 type customSettings struct {
-	jsonData                mapStrings
-	decryptedSecureJSONData mapStrings
-	headers                 mapStrings
-	queryParameters         mapStrings
+	jsonData                settings
+	decryptedSecureJSONData settings
+	headers                 settings
+	queryParameters         settings
 }
 
-func NewCustomSettings(jsonData json.RawMessage, decryptedSecureJSONData mapStrings) (*customSettings, error) {
-	var jsonMap mapStrings
+func NewCustomSettings(jsonData json.RawMessage, decryptedSecureJSONData settings) (*customSettings, error) {
+	var jsonMap settings
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
 		return nil, fmt.Errorf("error converting json.RawMessage to map[string]string")
 	}
@@ -24,8 +24,8 @@ func NewCustomSettings(jsonData json.RawMessage, decryptedSecureJSONData mapStri
 	customSettings := &customSettings{
 		jsonData:                jsonMap,
 		decryptedSecureJSONData: decryptedSecureJSONData,
-		headers:                 make(mapStrings),
-		queryParameters:         make(mapStrings),
+		headers:                 make(settings),
+		queryParameters:         make(settings),
 	}
 
 	customSettings.getDataSourceCustomSettings()
