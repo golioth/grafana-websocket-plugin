@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TypeaheadInput, TypeaheadOutput } from '@grafana/ui'
 import { JSONPath } from 'jsonpath-plus'
 
