@@ -82,7 +82,7 @@ A data source backend plugin consists of both frontend and backend components.
 1. Start the docker container
 
    ```bash
-   docker run -d --network="host" -e "GF_LOG_MODE=console file" -p 3000:3000 -v ~/Golioth/Codes/grafana-plugins:/var/lib/grafana/plugins --name=grafana grafana/grafana
+   docker run -d --network="host" -e "GF_LOG_MODE=console file" -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=golioth-websocket-datasource" -p 3000:3000 -v ~/Golioth/Codes/grafana-plugins:/var/lib/grafana/plugins --name=grafana grafana/grafana
    ```
 
 2. Load the GUI in your browser:
