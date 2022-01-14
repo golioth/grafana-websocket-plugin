@@ -56,6 +56,12 @@ A data source backend plugin consists of both frontend and backend components.
    yarn build
    ```
 
+   * **Yarn Error**: If yarn throws `opensslErrorStack`, export this value in the terminal and build yarn again:
+
+     ```bash
+     export NODE_OPTIONS=--openssl-legacy-provider
+     ```
+
 ### Backend
 
 1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
@@ -82,13 +88,20 @@ A data source backend plugin consists of both frontend and backend components.
 1. Start the docker container
 
    ```bash
-    docker run --rm \
+    docker run \
       --network="host" -e "GF_LOG_MODE=console file" \
       -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=golioth-websocket-datasource" \
       -p 3000:3000 \
       -v ~/Golioth/Codes/grafana-plugins:/var/lib/grafana/plugins \
       --name=grafana grafana/grafana
    ```
+
+   * Notes regarding Docker: 
+     * Restart container after first run: `docker start grafana`
+     * Restart container after first run as daemon: `docker start grafana`
+     * Restart container and show the output: `docker start grafana -a`
+     * Stop the container when running as daemon: `docker stop grafana`
+     * Remove the container from your system: `docker rm -fv grafana`
 
 2. Load the GUI in your browser:
    * [http://localhost:3000](http://localhost:3000)
@@ -109,7 +122,7 @@ A data source backend plugin consists of both frontend and backend components.
 
    * WebSocket Host should use this format: `wss://api.golioth.io/v1/ws/projects/{project-id}`
    * Query Parameters key must be `x-api-key`
-   * Value will be your API key from the [Golioth Console](https://console.golioth.io)
+   * Value will be your API key from the [Golioth Console](https://console.golioth.io/api-keys)
 
 3. Add a panel to Grafana Dashboard
 
@@ -130,7 +143,9 @@ A data source backend plugin consists of both frontend and backend components.
    * `$.result.data.timestamp`
    * `$.result.data.data.temp`
 
-3. Choose "Time series" from the upper right "Visualizations" list.
+3. Make sure that Table View is turned off and choose "Time series" from the upper right "Visualizations" list.
+
+4. Choose "Last 5 minutes" from the time selection window in the upper right corner of the graph.
 
    ![Graphana Websockets Graph](assets/grafana-websockets-graphing.png)
 
