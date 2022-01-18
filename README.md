@@ -14,6 +14,65 @@ For more information about backend plugins, refer to the documentation on [Backe
 
 A data source backend plugin consists of both frontend and backend components.
 
+### Install Toolchain
+
+1. Go Language
+
+   The Go language version 1.14 or later is needed. You can install go with `sudo apt install golang-go` but some package managers have older versions. Use `go version` to confirm. If you need to install a newer version, [download the package](https://go.dev/dl/) and install it:
+
+   ```bash
+   cd ~
+   tar -xvf ~/Downloads/go1.17.6.linux-amd64.tar.gz
+   nano ~/.profile
+   ```
+
+   Add the following lines to the end of this file:
+
+   ```bash
+   export GOPATH=$HOME/go
+   export PATH=$PATH:$GOPATH/bin
+   ```
+
+   Save the file and load the changes:
+
+   ```bash
+   source ~/.profile
+   ```
+
+2. Mage
+
+   Install [the Mage build tool](https://github.com/magefile/mage):
+
+   ```bash
+   go get -u -d github.com/magefile/mage
+   cd $GOPATH/pkg/mod/github.com/magefile/
+   chmod 755 mage*
+   cd mage*
+   go run bootstrap.go
+   ```
+
+   We have already step up `$GOPATH\bin` when installing golang. Mage is installed to the same directory.
+
+3. Node.js
+
+   Node.js can be installed using a package manager with the command `sudo apt install nodejs` but often times this is an older version. We need to run `yarn`, which depends on version 14 or greater of Node.js.
+
+   Display your Node version using `node -v`. To move to a newer version, [install the Node Version Manager](https://github.com/nvm-sh/nvm#install--update-script) (`nvm`) and use it to install and switch to a newer version:
+
+   ```bash
+   nvm install stable
+   nvm use stable
+   node -v
+   ```
+
+4. Yarn
+
+   Install the Yarn package manager:
+
+   ```bash
+   npm install yarn --global
+   ```
+
 ### Setup Plugin Directory
 
 1. Create directory:
@@ -23,7 +82,7 @@ A data source backend plugin consists of both frontend and backend components.
    ```
 
 2. Clone this repo into the new directory and update to `develop` branch:
-   
+
    ```bash
    cd ~/Golioth/Codes/grafana-plugins/grafana-websocket-plugin
    git clone git@github.com:golioth/grafana-websocket-plugin.git .
@@ -32,9 +91,10 @@ A data source backend plugin consists of both frontend and backend components.
 
 ### Frontend
 
-1. Install dependencies
+1. Install plugin dependencies
 
    ```bash
+   ~/Golioth/Codes/grafana-plugins/grafana-websocket-plugin
    yarn install
    ```
 
