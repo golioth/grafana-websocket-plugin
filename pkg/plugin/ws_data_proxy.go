@@ -15,20 +15,22 @@ import (
 )
 
 type wsDataProxy struct {
-	wsUrl        string
-	wsConn       *websocket.Conn
-	msgRead      chan []byte
-	sender       *backend.StreamSender
-	done         chan bool
-	wsDataSource *WebSocketDataSource
+	wsUrl         string
+	wsConn        *websocket.Conn
+	msgRead       chan []byte
+	sender        *backend.StreamSender
+	done          chan bool
+	wsDataSource  *WebSocketDataSource
+	readingErrors chan error
 }
 
 func NewWsDataProxy(req *backend.RunStreamRequest, sender *backend.StreamSender, ds *WebSocketDataSource) (*wsDataProxy, error) {
 	wsDataProxy := &wsDataProxy{
-		msgRead:      make(chan []byte),
-		sender:       sender,
-		done:         make(chan bool, 1),
-		wsDataSource: ds,
+		msgRead:       make(chan []byte),
+		sender:        sender,
+		done:          make(chan bool, 1),
+		wsDataSource:  ds,
+		readingErrors: make(chan error),
 	}
 
 	url, err := wsDataProxy.encodeURL(req)
@@ -50,6 +52,7 @@ func (wsdp *wsDataProxy) readMessage() {
 	defer func() {
 		wsdp.wsConn.Close()
 		close(wsdp.msgRead)
+		log.DefaultLogger.Info("Read Message routine", "detail", "closing websocket connection and msgRead channel")
 	}()
 
 	for {
@@ -58,26 +61,10 @@ func (wsdp *wsDataProxy) readMessage() {
 			return
 		default:
 			_, message, err := wsdp.wsConn.ReadMessage()
-
 			if err != nil {
-				if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-					log.DefaultLogger.Error("Disconnection Error", "error", err.Error())
-					sendErrorFrame(fmt.Sprintf("%s: %s", "Disconnection Error", err.Error()), wsdp.sender)
-
-					wsdp.wsConn, err = wsdp.wsConnect()
-					if err != nil {
-						log.DefaultLogger.Error("Reconnection Error", "error", err.Error())
-						sendErrorFrame(fmt.Sprintf("%s: %s", "Reconnection Error", err.Error()), wsdp.sender)
-					}
-
-				} else {
-					// it can be either antoher possible RFC close errors or more generic errors
-					log.DefaultLogger.Error("Failed Read Message Error", "error", err.Error())
-					sendErrorFrame(fmt.Sprintf("%s: %s", "Read WebSocket Error", err.Error()), wsdp.sender)
-
-					break
-				}
-				time.Sleep(time.Second * 3)
+				time.Sleep(3 * time.Second)
+				wsdp.readingErrors <- fmt.Errorf("%s: %s", "Error reading the websocket", err.Error())
+				return
 			} else {
 				wsdp.msgRead <- message
 			}
