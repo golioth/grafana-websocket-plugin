@@ -28,7 +28,11 @@
         "url": "https://github.com/grafana/grafana-starter-datasource-backend/blob/master/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {"name": "Config Data Source", "path": "img/assets/golioth-grafana-websockets-plugin-datasource.png"},
+      {"name": "Websockets Payloads", "path": "img/assets/grafana-websockets-graphing.png"},
+      {"name": "Streaming", "path": "img/assets/grafana-websockets-plugin-streaming.png"}
+    ],
     "version": "1.0.0-alpha",
     "updated": "%TODAY%"
   },
