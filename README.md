@@ -116,7 +116,7 @@ A data source backend plugin consists of both frontend and backend components.
    yarn build
    ```
 
-   * **Yarn Error**: If yarn throws `opensslErrorStack`, export this value in the terminal and build yarn again:
+   - **Yarn Error**: If yarn throws `opensslErrorStack`, export this value in the terminal and build yarn again:
 
      ```bash
      export NODE_OPTIONS=--openssl-legacy-provider
@@ -156,41 +156,42 @@ A data source backend plugin consists of both frontend and backend components.
       --name=grafana grafana/grafana
    ```
 
-   * Notes regarding Docker: 
-     * Restart container after first run: `docker start grafana`
-     * Restart container after first run as daemon: `docker start grafana`
-     * Restart container and show the output: `docker start grafana -a`
-     * Stop the container when running as daemon: `docker stop grafana`
-     * Remove the container from your system: `docker rm -fv grafana`
+   - Notes regarding Docker:
+     - Restart container after first run: `docker start grafana`
+     - Restart container after first run as daemon: `docker start grafana`
+     - Restart container and show the output: `docker start grafana -a`
+     - Stop the container when running as daemon: `docker stop grafana`
+     - Remove the container from your system: `docker rm -fv grafana`
 
 2. Load the GUI in your browser:
-   * [http://localhost:3000](http://localhost:3000)
-   * user: admin
-   * password: admin
-   * Grafana will ask you to change the password on first login
+   - [http://localhost:3000](http://localhost:3000)
+   - user: admin
+   - password: admin
+   - Grafana will ask you to change the password on first login
 
 ### Configure Data Source
 
 1. Add websockets data source in Grafana
-   * Click the gear icon on the left sidebar and choose "data sources"
-   * Click "Add data source"
-   * Scroll to the bottom and chose "WebSocket API" in the "Others" category. (If this entry is not an option, you may have a problem with allowing unsigned sources.)
+
+   - Click the gear icon on the left sidebar and choose "data sources"
+   - Click "Add data source"
+   - Scroll to the bottom and chose "WebSocket API" in the "Others" category. (If this entry is not an option, you may have a problem with allowing unsigned sources.)
 
 2. Input WebSocket API information
 
    ![Grafana Websockets Configuration](assets/golioth-grafana-websockets-plugin-datasource.png)
 
-   * WebSocket Host should use this format: `wss://api.golioth.io/v1/ws/projects/{project-id}`
-   * Query Parameters key must be `x-api-key`
-   * Value will be your API key from the [Golioth Console](https://console.golioth.io/api-keys)
+   - WebSocket Host should use this format: `wss://api.golioth.io/v1/ws/projects/{project-id}`
+   - Query Parameters key must be `x-api-key`
+   - Value will be your API key from the [Golioth Console](https://console.golioth.io/api-keys)
 
 3. Add a panel to Grafana Dashboard
 
-   * Click `+` in the left sidbar. Choose "Dashboard" --> "Add a new panel"
-   * In the bottom left, set "Fields" to `$`
-   * Click the "Path" tab and set to `/stream`
-   * Click the "Table view" toggle at the top of the window
-   * Any data currently coming in on your project's lightDB stream will begin showing as JSON
+   - Click `+` in the left sidbar. Choose "Dashboard" --> "Add a new panel"
+   - In the bottom left, set "Fields" to `$`
+   - Click the "Path" tab and set to `/stream`
+   - Click the "Table view" toggle at the top of the window
+   - Any data currently coming in on your project's lightDB stream will begin showing as JSON
 
    ![Graphana showing lightDB stream json packets](assets/grafana-websockets-plugin-streaming.png)
 
@@ -200,14 +201,70 @@ A data source backend plugin consists of both frontend and backend components.
 
 2. Use two Field values to choose how the data is graphed (use the `+` on the right of the Field entry to add a second key):
 
-   * `$.result.data.timestamp`
-   * `$.result.data.data.temp`
+   - `$.result.data.timestamp`
+   - `$.result.data.data.temp`
 
 3. Make sure that Table View is turned off and choose "Time series" from the upper right "Visualizations" list.
 
 4. Choose "Last 5 minutes" from the time selection window in the upper right corner of the graph.
 
    ![Graphana Websockets Graph](assets/grafana-websockets-graphing.png)
+
+## Plugin Validation
+
+Every time you modify locally the plugin and desire send this change to be published you can validate it locally before to push. The validation will tell you if there is some kind of non-compliance with the Grafana Plugins Rules.
+
+For example, if you put some relative link in the README or some broken link, the validation will claim to you about them. And you'll need fix all of the claims before the submission.
+
+To perform the local validation you must have the `Make` tool installed so that you can run the Makefile's commands and the Grafana's plugin validator `plugincheck` in order to your validate it.
+
+In the root directory you can find a `Makefile` and it contains two commands:
+
+- **setup**
+
+  Run this command if you don't have installed yet the `plugincheck` tool in order to install it.
+
+- **validate-plugin**
+
+  Run this command after have installed the plugincheck. It will prepare and perform the plugin validation.
+
+To run the commands go to the terminal and goes to the plugin's root directory:
+
+```
+cd path/to/your/clone/grafana-websocket-plugin
+```
+
+Next, install the plugin validator
+
+```
+make setup
+```
+
+Finally, run the validator:
+
+```
+make validate-plugin
+```
+
+Case the validator realizes some error or warning in your plugin, it will generate in your terminal some kind of output like the following:
+
+```
+.
+.
+.
+
+plugincheck ./golioth-websocket-datasource.zip || true
+{
+  "level": "error",
+  "message": "Unsigned plugin",
+  "details": "Since Grafana 7.3, we require all plugins to be signed. For more information on how to sign your plugin, refer to [Sign a plugin](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/)."
+}
+.
+.
+.
+```
+
+You'll need verify each error or warning and solve them before pushing the plugin.
 
 ## Learn more
 
