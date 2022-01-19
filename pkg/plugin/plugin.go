@@ -98,12 +98,12 @@ func (wsds *WebSocketDataSource) query(_ context.Context, pCtx backend.PluginCon
 	// If query called with streaming on then return a channel
 	// to subscribe on a client-side and consume updates from a plugin.
 	// Feel free to remove this if you don't need streaming for your datasource.
-		channel := live.Channel{
-			Scope:     live.ScopeDatasource,
-			Namespace: pCtx.DataSourceInstanceSettings.UID,
-			Path:      path.Clean(qm.WsPath),
-		}
-		frame.SetMeta(&data.FrameMeta{Channel: channel.String()})
+	channel := live.Channel{
+		Scope:     live.ScopeDatasource,
+		Namespace: pCtx.DataSourceInstanceSettings.UID,
+		Path:      path.Clean(qm.WsPath),
+	}
+	frame.SetMeta(&data.FrameMeta{Channel: channel.String()})
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 
@@ -191,13 +191,22 @@ func (wsds *WebSocketDataSource) RunStream(ctx context.Context, req *backend.Run
 
 	go wsDataProxy.readMessage()
 
-	<-ctx.Done()
+	select {
+	case <-ctx.Done():
 
-	wsDataProxy.done <- true
+		wsDataProxy.done <- true
 
-	log.DefaultLogger.Info("Closing Channel", "channel", req.Path)
+		log.DefaultLogger.Info("Closing Channel", "channel", req.Path)
 
-	return nil
+		return nil
+	case rError := <-wsDataProxy.readingErrors:
+		log.DefaultLogger.Error("Error reading the websocket", "error", err.Error())
+		sendErrorFrame(fmt.Sprintf("%s: %s", "Error reading the websocket", err.Error()), sender)
+
+		log.DefaultLogger.Info("Closing Channel due an error to read websocket", "channel", req.Path)
+
+		return rError
+	}
 }
 
 // PublishStream is called when a client sends a message to the stream.

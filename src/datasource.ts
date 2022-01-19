@@ -47,18 +47,13 @@ export class DataSource extends DataSourceWithBackend<
           const newFrames = queries
             .filter(query => {
               const queryChannel = replaceWithVars(
-                `ds/${query.datasource?.uid}/${query.path}`,
+                `ds/${query.datasource?.uid}/${query?.path || '.'}`,
               )
               return queryChannel === eventChannel
             })
-            .map(query => {
-              return this.transformFrames(
-                event.data[0],
-                query,
-                scopedVars,
-                range,
-              )
-            })
+            .map(query =>
+              this.transformFrames(event.data[0], query, scopedVars, range),
+            )
 
           const key = `${dashboardId}/${panelId}/${eventChannel}`
           const eventBindingKey = key || event.key
@@ -68,7 +63,7 @@ export class DataSource extends DataSourceWithBackend<
             .map(frame => frame.meta?.custom)
 
           const errorMsg = errors.length
-            ? `Some queries returned an error: \n 
+            ? `Some queries returned an error:
               ${errors
                 .map(error => `Query ${error?.refId} - ${error?.error}`)
                 .join('\n')}`
@@ -106,7 +101,7 @@ export class DataSource extends DataSourceWithBackend<
     range: TimeRange,
   ): DataFrame => {
     const { refId } = query
-    if (query?.fields.length === 0) return { ...eventFrame, refId }
+    if (query?.fields?.length === 0) return { ...eventFrame, refId }
 
     // casted to any to avoid typescript Vector<any> error
     const eventFields = eventFrame.fields as any[]
@@ -122,7 +117,7 @@ export class DataSource extends DataSourceWithBackend<
       })
 
     const newFields = query?.fields
-      .filter(field => field.jsonPath)
+      ?.filter(field => field.jsonPath)
       .map(field => this.transformFields(field, scopedVars, range, eventValues))
 
     if (eventFields.find(field => field.name === 'error')) {
