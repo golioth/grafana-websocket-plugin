@@ -4,17 +4,11 @@ A WebSocket data source plugin for realtime data updates in [Grafana](https://gr
 
 # Plugin Purpose
 
-This plugin was developed to enable dashboards to automatically update as new data is available in the data source, without having to periodically fetch data from it.
-
-For that, it's mandatory to connect the plugin to a WebSocket Endpoint in the desired API (aka Data Source). If your data source is not a websocket endpoint, then it'll not work for your case. 
+This plugin allows you to connect a WebSocket endpoint as a Data Source for your Grafana dashboard. Unlike REST APIs, WebSockets automatically update as soon as new data is available from the source, without having to periodically fetch data from it.
 
 # How it works
 
-After configuring the plugin to connect to a WebSocket Endpoint, when you instantiate the plugin as a Data Source to you Dashboard, it will open the websocket connection with the source API and keeps it open.
-
-Every time the Data Source has new data available, it will send through the opened websocket connection directly to the plugin and your dashboard will be automatically updated. 
-
-> To have this working properly, it's necessary set it up correctly the plugin in its configuration page and, after this, import it to your dashboard. You can see the details in the next section.
+When a WebSocket endpoint is added as a data source in Grafana, the plugin will open the WebSocket connection with the source API and keep it open. When there is new data, the WebSocket endpoint will send it directly to the plugin through the open WebSocket connection and your dashboard will be updated automatically.
 
 # Using the WebSocket Data Source
 
