@@ -18,11 +18,11 @@
     "jsonpath-plus": "^6.0.1"
   },
   "devDependencies": {
-    "@grafana/data": "latest",
-    "@grafana/toolkit": "latest",
-    "@grafana/runtime": "latest",
-    "@grafana/ui": "latest",
-    "@types/lodash": "latest",
+    "@grafana/data": "8.3.6",
+    "@grafana/runtime": "8.3.6",
+    "@grafana/toolkit": "8.3.6",
+    "@grafana/ui": "8.3.6",
+    "@types/lodash": "^4.14.149",
     "@types/react-virtualized-auto-sizer": "^1.0.0",
     "emotion": "10.0.27",
     "react-virtualized-auto-sizer": "^1.0.4"
