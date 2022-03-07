@@ -33,7 +33,7 @@
       {"name": "Websockets Payloads", "path": "img/assets/grafana-websockets-graphing.png"},
       {"name": "Streaming", "path": "img/assets/grafana-websockets-plugin-streaming.png"}
     ],
-    "version": "1.0.0",
+    "version": "1.0.1",
     "updated": "%TODAY%"
   },
   "dependencies": {
