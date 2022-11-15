@@ -8,7 +8,7 @@
   "streaming": true,
   "executable": "gpx_websocket",
   "info": {
-    "description": "A data source plugin for handling WebSocket connections on Grafana.",
+    "description": "A data source plugin for handling WebSocket connections on Grafana. Works great in the general use case or with IoT projects built on Golioth.",
     "author": {
       "name": "Golioth",
       "url": "https://golioth.io"
@@ -29,9 +29,18 @@
       }
     ],
     "screenshots": [
-      {"name": "Config Data Source", "path": "img/assets/golioth-grafana-websockets-plugin-datasource.png"},
-      {"name": "Websockets Payloads", "path": "img/assets/grafana-websockets-graphing.png"},
-      {"name": "Streaming", "path": "img/assets/grafana-websockets-plugin-streaming.png"}
+      {
+        "name": "Config Data Source",
+        "path": "img/assets/golioth-grafana-websockets-plugin-datasource.png"
+      },
+      {
+        "name": "Websockets Payloads",
+        "path": "img/assets/grafana-websockets-graphing.png"
+      },
+      {
+        "name": "Streaming",
+        "path": "img/assets/grafana-websockets-plugin-streaming.png"
+      }
     ],
     "version": "1.0.1",
     "updated": "%TODAY%"
