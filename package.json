@@ -14,21 +14,27 @@
   "author": "Golioth",
   "license": "Apache-2.0",
   "dependencies": {
+    "@grafana/toolkit": "latest",
+    "@types/lodash": "latest",
     "dayjs": "^1.10.4",
     "jsonpath-plus": "^6.0.1"
   },
   "devDependencies": {
-    "@grafana/data": "8.3.6",
-    "@grafana/runtime": "8.3.6",
-    "@grafana/toolkit": "8.3.6",
-    "@grafana/ui": "8.3.6",
-    "@types/lodash": "^4.14.149",
+    "@grafana/data": "latest",
+    "@grafana/runtime": "latest",
+    "@grafana/ui": "latest",
     "@types/react-virtualized-auto-sizer": "^1.0.0",
     "emotion": "10.0.27",
-    "react-virtualized-auto-sizer": "^1.0.4"
+    "eslint-plugin-prettier": "^4.2.1",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-virtualized-auto-sizer": "^1.0.4",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "eslint-config-prettier": "^8.1.0"
   },
   "resolutions": {
-    "rxjs": "7.3.0"
+    "rxjs": "7.5.6"
   },
   "engines": {
     "node": ">=14"

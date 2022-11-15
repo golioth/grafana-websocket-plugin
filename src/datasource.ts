@@ -101,7 +101,9 @@ export class DataSource extends DataSourceWithBackend<
     range: TimeRange,
   ): DataFrame => {
     const { refId } = query
-    if (query?.fields?.length === 0) return { ...eventFrame, refId }
+    if (query?.fields?.length === 0) {
+      return { ...eventFrame, refId }
+    }
 
     // casted to any to avoid typescript Vector<any> error
     const eventFields = eventFrame.fields as any[]
@@ -151,7 +153,7 @@ export class DataSource extends DataSourceWithBackend<
     field: QueryField,
     scopedVars: ScopedVars,
     range: TimeRange,
-    eventValues?: Record<string, unknown>[],
+    eventValues?: Array<Record<string, unknown>>,
   ): Field => {
     const replaceWithVars = replace(scopedVars, range)
     const path = replaceWithVars(field.jsonPath)
@@ -172,11 +174,11 @@ export class DataSource extends DataSourceWithBackend<
   }
 }
 
-const replace = (scopedVars?: ScopedVars, range?: TimeRange) => (
-  str: string,
-): string => {
-  return replaceMacros(getTemplateSrv().replace(str, scopedVars), range)
-}
+const replace =
+  (scopedVars?: ScopedVars, range?: TimeRange) =>
+  (str: string): string => {
+    return replaceMacros(getTemplateSrv().replace(str, scopedVars), range)
+  }
 
 // replaceMacros substitutes all available macros with their current value.
 export const replaceMacros = (str: string, range?: TimeRange) => {

@@ -105,11 +105,8 @@ export class CustomHeadersSettings extends PureComponent<Props, State> {
 
   constructor(props: Props) {
     super(props)
-    const {
-      jsonData,
-      secureJsonData,
-      secureJsonFields,
-    } = this.props.dataSourceConfig
+    const { jsonData, secureJsonData, secureJsonFields } =
+      this.props.dataSourceConfig
     this.state = {
       headers: Object.keys(jsonData)
         .sort()

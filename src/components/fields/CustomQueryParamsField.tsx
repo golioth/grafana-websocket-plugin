@@ -105,11 +105,8 @@ export class CustomQueryParamsSettings extends PureComponent<Props, State> {
 
   constructor(props: Props) {
     super(props)
-    const {
-      jsonData,
-      secureJsonData,
-      secureJsonFields,
-    } = this.props.dataSourceConfig
+    const { jsonData, secureJsonData, secureJsonFields } =
+      this.props.dataSourceConfig
     this.state = {
       queryParams: Object.keys(jsonData)
         .sort()

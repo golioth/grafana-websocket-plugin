@@ -12,10 +12,12 @@ export const PathField: React.FC<Props> = ({ path, onChange }) => {
   const debouncedValue = useDebounce(value, 500, path)
 
   useEffect(() => {
-    if (debouncedValue === path) return
+    if (debouncedValue === path) {
+      return
+    }
 
     onChange(debouncedValue || '')
-  }, [debouncedValue])
+  }, [debouncedValue, path, onChange])
 
   return (
     <Input
