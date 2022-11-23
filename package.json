@@ -1,6 +1,6 @@
 {
   "name": "golioth-websocket",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "scripts": {
     "start": "yarn watch",
@@ -14,21 +14,24 @@
   "author": "Golioth",
   "license": "Apache-2.0",
   "dependencies": {
+    "@grafana/data": "latest",
+    "@grafana/runtime": "latest",
+    "@grafana/toolkit": "latest",
+    "@grafana/ui": "latest",
     "dayjs": "^1.10.4",
-    "jsonpath-plus": "^6.0.1"
-  },
-  "devDependencies": {
-    "@grafana/data": "8.3.6",
-    "@grafana/runtime": "8.3.6",
-    "@grafana/toolkit": "8.3.6",
-    "@grafana/ui": "8.3.6",
-    "@types/lodash": "^4.14.149",
-    "@types/react-virtualized-auto-sizer": "^1.0.0",
     "emotion": "10.0.27",
+    "jsonpath-plus": "^6.0.1",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
     "react-virtualized-auto-sizer": "^1.0.4"
   },
+  "devDependencies": {
+    "@types/lodash": "latest",
+    "@types/react-virtualized-auto-sizer": "^1.0.0",
+    "eslint-plugin-prettier": "^4.2.1"
+  },
   "resolutions": {
-    "rxjs": "7.3.0"
+    "rxjs": "7.5.6"
   },
   "engines": {
     "node": ">=14"

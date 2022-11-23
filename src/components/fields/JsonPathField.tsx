@@ -15,10 +15,12 @@ export const JsonPathField: React.FC<Props> = ({ jsonPath, onChange }) => {
   const debouncedValue = useDebounce(value, 500, jsonPath)
 
   useEffect(() => {
-    if (debouncedValue === jsonPath) return
+    if (debouncedValue === jsonPath) {
+      return
+    }
 
     onChange(debouncedValue || '')
-  }, [debouncedValue])
+  }, [debouncedValue, jsonPath, onChange])
 
   /**
    * The QueryField supports Slate plugins, so let's add a few useful ones.

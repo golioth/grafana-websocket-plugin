@@ -18,15 +18,14 @@ export const FieldEditor = ({ value = [], onChange, limit }: Props) => {
     )
   }
 
-  const onLanguageChange = (i: number) => (
-    e: SelectableValue<QueryLanguage>,
-  ) => {
-    onChange(
-      value.map((field, n) =>
-        i === n ? { ...value[i], language: e.value } : field,
-      ),
-    )
-  }
+  const onLanguageChange =
+    (i: number) => (e: SelectableValue<QueryLanguage>) => {
+      onChange(
+        value.map((field, n) =>
+          i === n ? { ...value[i], language: e.value } : field,
+        ),
+      )
+    }
   const onChangeType = (i: number) => (e: SelectableValue<string>) => {
     onChange(
       value.map((field, n) =>
@@ -45,18 +44,16 @@ export const FieldEditor = ({ value = [], onChange, limit }: Props) => {
     )
   }
 
-  const addField = (
-    i: number,
-    defaults?: { language: QueryLanguage },
-  ) => () => {
-    if (!limit || value.length < limit) {
-      onChange([
-        ...value.slice(0, i + 1),
-        { name: '', jsonPath: '', ...defaults },
-        ...value.slice(i + 1),
-      ])
+  const addField =
+    (i: number, defaults?: { language: QueryLanguage }) => () => {
+      if (!limit || value.length < limit) {
+        onChange([
+          ...value.slice(0, i + 1),
+          { name: '', jsonPath: '', ...defaults },
+          ...value.slice(i + 1),
+        ])
+      }
     }
-  }
   const removeField = (i: number) => () => {
     onChange([...value.slice(0, i), ...value.slice(i + 1)])
   }

@@ -5,4 +5,4 @@ module.exports = {
   arrowParens: 'avoid',
   jsxSingleQuote: true,
   trailingComma: 'all',
-};
+}

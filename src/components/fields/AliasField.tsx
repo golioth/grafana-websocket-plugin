@@ -12,10 +12,12 @@ export const AliasField: React.FC<Props> = ({ alias, onChange }) => {
   const debouncedValue = useDebounce(value, 500, alias)
 
   useEffect(() => {
-    if (debouncedValue === alias) return
+    if (debouncedValue === alias) {
+      return
+    }
 
     onChange(debouncedValue || '')
-  }, [debouncedValue])
+  }, [debouncedValue, alias, onChange])
 
   return (
     <Input
