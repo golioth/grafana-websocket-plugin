@@ -103,7 +103,7 @@ func (wsdp *wsDataProxy) encodeURL(req *backend.RunStreamRequest) (string, error
 		return "", fmt.Errorf("failed to read JSON Data Source Instance Settings: %s", err.Error())
 	}
 
-	host := reqJsonData["host"].(string)
+	host := reqJsonData["url"].(string)
 
 	wsUrl, err := url.Parse(host)
 	if err != nil {

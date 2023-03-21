@@ -14,7 +14,7 @@ export const ConfigEditor: FC<Props> = ({ options, onOptionsChange }) => {
   const onHostChange = (event: ChangeEvent<HTMLInputElement>) => {
     const jsonData = {
       ...options.jsonData,
-      host: event.target.value,
+      url: event.target.value,
     }
     onOptionsChange({ ...options, jsonData })
   }
@@ -29,7 +29,7 @@ export const ConfigEditor: FC<Props> = ({ options, onOptionsChange }) => {
             labelWidth={10}
             inputWidth={30}
             onChange={onHostChange}
-            value={jsonData.host || ''}
+            value={jsonData.url || ''}
             placeholder='wss://api.domain.io/v1/ws/'
           />
         </div>
