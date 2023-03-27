@@ -10,13 +10,14 @@ const { FormField } = LegacyForms
 type Props = DataSourcePluginOptionsEditorProps<DataSourceOptions>
 
 export const ConfigEditor: FC<Props> = ({ options, onOptionsChange }) => {
-  const { jsonData } = options
+  const { url, jsonData } = options
+
   const onHostChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const jsonData = {
-      ...options.jsonData,
+    const newOptions = {
+      ...options,
       url: event.target.value,
     }
-    onOptionsChange({ ...options, jsonData })
+    onOptionsChange({ ...newOptions, jsonData })
   }
 
   return (
@@ -29,7 +30,7 @@ export const ConfigEditor: FC<Props> = ({ options, onOptionsChange }) => {
             labelWidth={10}
             inputWidth={30}
             onChange={onHostChange}
-            value={jsonData.url || ''}
+            value={url || ''}
             placeholder='wss://api.domain.io/v1/ws/'
           />
         </div>
