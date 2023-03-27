@@ -95,7 +95,7 @@ func (wsdp *wsDataProxy) proxyMessage() {
 	}
 }
 
-// encodeURl is hard coded with some variables like scheme and x-api-key but will be definetly refactored after changes in the config editor
+// encodeURL is hard coded with some variables like scheme and x-api-key but will be definetly refactored after changes in the config editor
 func (wsdp *wsDataProxy) encodeURL(req *backend.RunStreamRequest) (string, error) {
 	var reqJsonData map[string]interface{}
 
@@ -103,11 +103,11 @@ func (wsdp *wsDataProxy) encodeURL(req *backend.RunStreamRequest) (string, error
 		return "", fmt.Errorf("failed to read JSON Data Source Instance Settings: %s", err.Error())
 	}
 
-	host := reqJsonData["url"].(string)
+	host := req.PluginContext.DataSourceInstanceSettings.URL
 
 	wsUrl, err := url.Parse(host)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse host string from Config Editor: %s", err.Error())
+		return "", fmt.Errorf("failed to parse host string from the Plugin's Config Editor: %s", err.Error())
 	}
 
 	wsUrl.Path = path.Join(wsUrl.Path, req.Path)
