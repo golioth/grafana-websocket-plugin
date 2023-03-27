@@ -295,7 +295,7 @@ A data source backend plugin consists of both frontend and backend components.
 
 ### Sample Data Source and Customizing Your Data View
 
-1. [Golioth's light DB stream sample](https://github.com/golioth/zephyr-sdk/tree/main/samples/lightdb_stream) is a perfect data source for this demo. It will provide varying temperatu - Any data currently coming in on your project's lightDB stream will begin showing as JSON
+1. [Golioth's light DB stream sample](https://github.com/golioth/golioth-zephyr-sdk/tree/main/samples/lightdb_stream) is a perfect data source for this demo. It will provide varying temperatu - Any data currently coming in on your project's lightDB stream will begin showing as JSON
 
 2. Make sure that Table View is turned off and choose "Time series" from the upper right "Visualizations" list.
 
