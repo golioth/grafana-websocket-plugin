@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+
+- support for Grafana provisioning configuration
+
 ## 1.0.2
 
 - update plugin's description and bump toolkit version

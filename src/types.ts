@@ -24,7 +24,7 @@ export const defaultQuery: Partial<Query> = {
 }
 
 export interface DataSourceOptions extends DataSourceJsonData {
-  host?: string
+  url?: string
 }
 
 export interface SecureJsonData {

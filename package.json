@@ -1,7 +1,7 @@
 {
   "name": "golioth-websocket",
-  "version": "1.0.2",
-  "description": "",
+  "version": "1.1.0",
+  "description": "A Web Socket Data Source Plugin for Grafana",
   "scripts": {
     "start": "yarn watch",
     "build": "grafana-toolkit plugin:build",
@@ -12,6 +12,11 @@
     "sign": "grafana-toolkit plugin:sign"
   },
   "author": "Golioth",
+  "contributors": [
+    {
+      "name": "@mountainash"
+    }
+  ],
   "license": "Apache-2.0",
   "dependencies": {
     "@grafana/data": "latest",
