@@ -1,4 +1,20 @@
-# <a name="commit"></a> Commit Message Format
+# What is Grafana Data Source Backend Plugin?
+
+Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
+
+For more information about backend plugins, refer to the documentation on [Backend plugins](https://grafana.com/docs/grafana/latest/developers/plugins/backend/).
+
+A backend data source plugin consists of both frontend and backend components.
+
+In this case, the frontend is written in javascript and the backend is written in golang.
+
+# Summary
+
+- [Commits format](#commit)
+- [Building and running locally](#run-locally)
+- [Learn More related contents](#learn-more)
+
+# <a name="commit" id="commit"></a> Commit Message Format
 
 We have very precise rules over how our Git commit messages must be formatted.
 This format leads to **easier to read commit history**.
@@ -89,7 +105,7 @@ Breaking Change section should start with the phrase "BREAKING CHANGE: " followe
 
 Similarly, a Deprecation section should start with "DEPRECATED: " followed by a short description of what is deprecated, a blank line, and a detailed description of the deprecation that also mentions the recommended update path.
 
-### Revert commits
+### <a name="revert-commit"></a>Revert commits
 
 If the commit reverts a previous commit, it should begin with `revert: `, followed by the header of the reverted commit.
 
@@ -98,19 +114,11 @@ The content of the commit message body should contain:
 - information about the SHA of the commit being reverted in the following format: `This reverts commit <SHA>`,
 - a clear description of the reason for reverting the commit message.
 
-# Instructions for Building and Running Locally
+---
+
+# Instructions for Building and Running it Locally <a name="run-locally" id="run-locally"></a>
 
 This is a starting point for building Grafana Data Source Backend Plugins
-
-## What is Grafana Data Source Backend Plugin?
-
-Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
-
-For more information about backend plugins, refer to the documentation on [Backend plugins](https://grafana.com/docs/grafana/latest/developers/plugins/backend/).
-
-## Getting started
-
-A data source backend plugin consists of both frontend and backend components.
 
 ### Install Toolchain
 
@@ -241,14 +249,38 @@ A data source backend plugin consists of both frontend and backend components.
    mage -l
    ```
 
-### Run the Grafana
+### Sign the Grafana plugin (Golioth Maintainers)
 
-1. Start the docker container
+In case you have a Grafana API KEY, you can sign the plugin locally.
 
+Set the GRAFANA_API_KEY:
+```
+$ export GRAFANA_API_KEY=<api-key-here>
+```
+
+Sign the plugin:
+```
+$ npm run sign
+```
+
+### Run the Grafana with Docker
+
+1. Start the docker container:
+
+- Run Grafana able to execute **unsigned** plugins
    ```bash
-    docker run \
+   $ docker run \
       --network="host" -e "GF_LOG_MODE=console file" \
       -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=golioth-websocket-datasource" \
+      -p 3000:3000 \
+      -v path/to/your/clone:/var/lib/grafana/plugins \
+      --name=grafana grafana/grafana
+   ```
+
+- Run Grafana only **for signed** plugins
+   ```bash
+   $ docker run \
+      --network="host" -e "GF_LOG_MODE=console file" \
       -p 3000:3000 \
       -v path/to/your/clone:/var/lib/grafana/plugins \
       --name=grafana grafana/grafana
@@ -309,44 +341,36 @@ Every time you modify locally the plugin and desire send this change to be publi
 
 For example, if you put some relative link in the README or some broken link, the validation will claim to you about them. And you'll need fix all of the claims before the submission.
 
-To perform the local validation you must have the `Make` tool installed so that you can run the Makefile's commands and the Grafana's plugin validator `plugincheck` in order to your validate it.
+To perform the local validation you must have the `Make` tool installed so that you can run the Makefile's commands and the Grafana's [plugin validator](https://github.com/grafana/plugin-validator) `plugincheck` in order to your validate it.
 
-In the root directory you can find a `Makefile` and it contains two commands:
+Or, you can skip installing the `plugincheck` locally and just run it through its binary using the `Node Package eXecute - npx command`. This tutorial will run the plugin validation using the `npx` command.
 
-- **setup**
-
-  Run this command if you don't have installed yet the `plugincheck` tool in order to install it.
+In the root directory you can find a `Makefile` with the following commands:
 
 - **validate-plugin**
 
-  Run this command after have installed the plugincheck. It will prepare and perform the plugin validation.
+  Run this command in order to validate the plugin.
 
-To run the commands go to the terminal and goes to the plugin's root directory:
-
-```
-cd path/to/your/clone/grafana-websocket-plugin
-```
-
-Next, install the plugin validator
+To run the command open the terminal and goes to the plugin's root directory:
 
 ```
-make setup
+$ cd path/to/your/clone/grafana-websocket-plugin
 ```
 
-Finally, run the validator:
+Run the validator:
 
 ```
-make validate-plugin
+$ make validate-plugin
 ```
 
-Case the validator realizes some error or warning in your plugin, it will generate in your terminal some kind of output like the following:
+Case the validator realizes any error or warning in your plugin, it will generate in your terminal some kind of output like the following:
 
 ```
 .
 .
 .
 
-plugincheck ./golioth-websocket-datasource.zip || true
+$ plugincheck ./golioth-websocket-datasource.zip || true
 {
   "level": "error",
   "message": "Unsigned plugin",
@@ -359,10 +383,14 @@ plugincheck ./golioth-websocket-datasource.zip || true
 
 You'll need verify each error or warning and solve them before pushing the plugin.
 
-## Learn more
+
+
+# Learn more <a name="learn-more" id="learn-more"></a>
 
 - [Build a data source backend plugin tutorial](https://grafana.com/tutorials/build-a-data-source-backend-plugin)
 - [Grafana documentation](https://grafana.com/docs/)
 - [Grafana Tutorials](https://grafana.com/tutorials/) - Grafana Tutorials are step-by-step guides that help you make the most of Grafana
 - [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
 - [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/)
+- [Grafana plugin-validator tool](https://github.com/grafana/plugin-validator)
+- [Grafana Publish Plugin](https://grafana.com/docs/grafana/latest/developers/plugins/publish-a-plugin/#submit-a-plugin-update)

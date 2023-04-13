@@ -1,4 +1,4 @@
-name: CI
+name: validate-build
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - develop
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
@@ -57,19 +57,30 @@ jobs:
         if: steps.check-for-backend.outputs.has-backend == 'true'
         uses: actions/setup-go@v2
         with:
-          go-version: '1.17'
+          go-version: '1.19'
 
       - name: Test backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: magefile/mage-action@v1
+        uses: magefile/mage-action@v2
         with:
-          version: latest
+          version: v1.14.0
           args: coverage
 
       - name: Build backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: magefile/mage-action@v1
+        uses: magefile/mage-action@v2
         with:
-          version: v1.12.1
+          version: v1.14.0
           args: buildAll
-          
+
+      - name: Sign plugin
+        run: yarn sign
+        env:
+          GRAFANA_API_KEY: ${{ secrets.GRAFANA_API_KEY }} # Requires a Grafana API key from Grafana.com.
+
+      - name: Upload plugin artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: golioth-websocket-datasource
+          path: ./dist
+          retention-days: 1
