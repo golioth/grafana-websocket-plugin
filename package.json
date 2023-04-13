@@ -33,7 +33,8 @@
   "devDependencies": {
     "@types/lodash": "latest",
     "@types/react-virtualized-auto-sizer": "^1.0.0",
-    "eslint-plugin-prettier": "^4.2.1"
+    "eslint-plugin-prettier": "^4.2.1",
+    "typescript": "<4.7.0"
   },
   "resolutions": {
     "rxjs": "7.5.6"
