@@ -79,7 +79,7 @@ jobs:
           GRAFANA_API_KEY: ${{ secrets.GRAFANA_API_KEY }} # Requires a Grafana API key from Grafana.com.
 
       - name: Upload plugin artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: golioth-websocket-datasource
           path: ./dist
